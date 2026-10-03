@@ -1,0 +1,596 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mobi Empresas</title>
+<meta name="theme-color" content="#0b6bcb">
+<style>
+:root{
+  --bg:#f5f6f8;--card:#ffffff;--txt:#14161a;--sub:#5d6470;--linha:#e3e6eb;--pri:#0b6bcb;--pri-txt:#ffffff;
+  --ok:#14804a;--ok-bg:#e6f4ec;--alerta:#a15c00;--alerta-bg:#fff3e0;--perigo:#c62828;--perigo-bg:#fdecec;
+  --alta:#c62828;--moderada:#e07b00;--normal:#1f7a3a;--baixa:#7a8594;
+  --raio:14px;--ok-txt:#ffffff;--perigo-txt:#ffffff;--sombra:0 1px 3px rgba(0,0,0,.08),0 4px 14px rgba(0,0,0,.05);
+  --fonte:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0f1115;--card:#181b21;--txt:#eef0f3;--sub:#a3aab5;--linha:#2a2f37;--pri:#4ea1ff;--pri-txt:#0b0d10;
+  --ok:#4cc38a;--ok-bg:#12291d;--alerta:#ffb547;--alerta-bg:#2c2312;--perigo:#ff6b6b;--perigo-bg:#2e1616;--sombra:none;--ok-txt:#0b0d10;--perigo-txt:#0b0d10}}
+:root[data-theme="dark"]{--bg:#0f1115;--card:#181b21;--txt:#eef0f3;--sub:#a3aab5;--linha:#2a2f37;--pri:#4ea1ff;--pri-txt:#0b0d10;
+  --ok:#4cc38a;--ok-bg:#12291d;--alerta:#ffb547;--alerta-bg:#2c2312;--perigo:#ff6b6b;--perigo-bg:#2e1616;--sombra:none;--ok-txt:#0b0d10;--perigo-txt:#0b0d10}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;background:var(--bg);color:var(--txt);font-family:var(--fonte);font-size:16px;line-height:1.45;-webkit-text-size-adjust:100%}
+body{min-height:100vh;overflow-x:hidden}
+a{color:var(--pri)}
+h1{font-size:1.35rem;margin:.2rem 0 .8rem}h2{font-size:1.1rem;margin:1.2rem 0 .6rem}h3{font-size:1rem;margin:.8rem 0 .4rem}
+.app{max-width:560px;margin:0 auto;padding:12px 16px 96px}
+.app.largo{max-width:1280px}
+.topo{position:sticky;top:0;z-index:20;background:var(--bg);display:flex;align-items:center;gap:10px;padding:10px 16px;border-bottom:1px solid var(--linha)}
+.topo .marca{font-weight:800;letter-spacing:.2px}
+.topo .esp{flex:1}
+.card{background:var(--card);border:1px solid var(--linha);border-radius:var(--raio);padding:14px;margin:10px 0;box-shadow:var(--sombra)}
+.linha{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.linha>.cresce{flex:1;min-width:0}
+.grade{display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}
+.kpi{background:var(--card);border:1px solid var(--linha);border-radius:12px;padding:12px}
+.kpi .v{font-size:1.35rem;font-weight:750}.kpi .r{font-size:.8rem;color:var(--sub)}
+.sub{color:var(--sub);font-size:.88rem}
+.peq{font-size:.8rem}
+.cent{text-align:center}
+.oculto{display:none!important}
+label{display:block;font-size:.85rem;color:var(--sub);margin:10px 0 4px}
+input,select,textarea{width:100%;font:inherit;color:var(--txt);background:var(--card);border:1px solid var(--linha);border-radius:10px;padding:11px 12px;min-height:44px}
+input:focus,select:focus,textarea:focus{outline:2px solid var(--pri);outline-offset:1px}
+input[type=checkbox],input[type=radio]{width:auto;min-height:0}
+.chk{display:flex;gap:8px;align-items:flex-start;margin:8px 0;color:var(--txt);font-size:.9rem}
+button,.btn{font:inherit;font-weight:650;border:0;border-radius:12px;padding:12px 16px;min-height:46px;cursor:pointer;background:var(--pri);color:var(--pri-txt);display:inline-flex;align-items:center;justify-content:center;gap:6px;text-decoration:none}
+button.sec,.btn.sec{background:transparent;color:var(--pri);border:1px solid var(--linha)}
+button.perigo,.btn.perigo{background:var(--perigo);color:var(--perigo-txt)}
+button.ok,.btn.ok{background:var(--ok);color:var(--ok-txt)}
+button.mini{min-height:34px;padding:6px 10px;font-size:.85rem;border-radius:9px}
+button:disabled{opacity:.55;cursor:not-allowed}
+button.cheio{width:100%}
+.pilula{display:inline-block;padding:2px 9px;border-radius:999px;font-size:.75rem;font-weight:700;background:var(--linha);color:var(--txt)}
+.pilula.ALTA,.pilula.CRITICA,.pilula.ALTO,.pilula.FALHOU,.pilula.BLOQUEADO,.pilula.VENCIDA{background:var(--perigo-bg);color:var(--perigo)}
+.pilula.MODERADA,.pilula.MEDIO,.pilula.PENDENTE,.pilula.ALERTA,.pilula.EM_ANALISE,.pilula.EM_ATENDIMENTO{background:var(--alerta-bg);color:var(--alerta)}
+.pilula.NORMAL,.pilula.OK,.pilula.BAIXO,.pilula.PAGA,.pilula.CONFIRMADO,.pilula.ATIVO,.pilula.ATIVA,.pilula.APROVADO{background:var(--ok-bg);color:var(--ok)}
+.pilula.BAIXA{background:var(--linha);color:var(--sub)}
+.aviso{background:var(--alerta-bg);color:var(--alerta);border-radius:10px;padding:10px 12px;font-size:.88rem;margin:8px 0}
+.info{background:var(--ok-bg);color:var(--ok);border-radius:10px;padding:10px 12px;font-size:.88rem;margin:8px 0}
+.erro{background:var(--perigo-bg);color:var(--perigo);border-radius:10px;padding:10px 12px;font-size:.88rem;margin:8px 0}
+.abas{position:fixed;left:0;right:0;bottom:0;z-index:30;background:var(--card);border-top:1px solid var(--linha);display:flex;justify-content:space-around;padding:6px 4px calc(6px + env(safe-area-inset-bottom))}
+.abas a{flex:1;text-align:center;font-size:.72rem;color:var(--sub);text-decoration:none;padding:6px 2px;border-radius:10px}
+.abas a .ic{display:block;font-size:1.25rem;line-height:1.2}
+.abas a.ativa{color:var(--pri);font-weight:700}
+.lista{list-style:none;margin:0;padding:0}
+.lista li{padding:12px 0;border-bottom:1px solid var(--linha)}
+.lista li:last-child{border-bottom:0}
+.mapa{height:46vh;min-height:260px;border-radius:var(--raio);overflow:hidden;border:1px solid var(--linha);background:var(--linha)}
+.mapa.baixo{height:34vh}
+.opcao{border:2px solid var(--linha);border-radius:12px;padding:12px;margin:8px 0;cursor:pointer;display:flex;gap:10px;align-items:center;background:var(--card)}
+.opcao.sel{border-color:var(--pri)}
+.preco{font-weight:800;font-size:1.1rem}
+.pin{font-size:2.2rem;letter-spacing:.35rem;font-weight:800;text-align:center;padding:6px 0}
+.estrelas button{background:transparent;color:var(--sub);font-size:2rem;padding:0 4px;min-height:0}
+.estrelas button.on{color:#f5a623}
+#toast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%);max-width:92vw;z-index:100;background:#222;color:#fff;padding:12px 16px;border-radius:12px;font-size:.92rem;opacity:0;pointer-events:none;transition:opacity .2s}
+#toast.on{opacity:.96}
+#toast.erro{background:var(--perigo)}
+.modal-fundo{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:90;display:flex;align-items:flex-end;justify-content:center}
+.modal{background:var(--card);color:var(--txt);width:100%;max-width:560px;max-height:88vh;overflow:auto;border-radius:18px 18px 0 0;padding:18px 16px calc(18px + env(safe-area-inset-bottom))}
+@media (min-width:700px){.modal-fundo{align-items:center}.modal{border-radius:18px}}
+.carregando{display:inline-block;width:18px;height:18px;border:2px solid var(--linha);border-top-color:var(--pri);border-radius:50%;animation:gira .8s linear infinite;vertical-align:middle}
+@keyframes gira{to{transform:rotate(360deg)}}
+table{width:100%;border-collapse:collapse;font-size:.88rem}
+th,td{text-align:left;padding:8px 6px;border-bottom:1px solid var(--linha);vertical-align:top}
+th{color:var(--sub);font-weight:600;font-size:.78rem;text-transform:uppercase;letter-spacing:.3px}
+.rolar{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.chat{display:flex;flex-direction:column;gap:8px}
+.bolha{max-width:85%;padding:10px 12px;border-radius:14px;font-size:.93rem;white-space:pre-wrap}
+.bolha.eu{align-self:flex-end;background:var(--pri);color:var(--pri-txt);border-bottom-right-radius:4px}
+.bolha.ia{align-self:flex-start;background:var(--card);border:1px solid var(--linha);border-bottom-left-radius:4px}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}
+.chips button{min-height:34px;padding:6px 10px;font-size:.82rem;background:var(--card);color:var(--txt);border:1px solid var(--linha);font-weight:500}
+.barra{height:8px;border-radius:99px;background:var(--linha);overflow:hidden}
+.barra>i{display:block;height:100%;background:var(--pri)}
+svg.grafico{width:100%;height:auto;display:block}
+svg.grafico text{fill:var(--sub);font-size:10px}
+.lado{display:grid;grid-template-columns:220px 1fr;gap:0;min-height:100vh}
+.menu{background:var(--card);border-right:1px solid var(--linha);padding:12px 8px;position:sticky;top:0;height:100vh;overflow:auto}
+.menu a{display:block;padding:9px 12px;border-radius:9px;color:var(--txt);text-decoration:none;font-size:.92rem}
+.menu a.ativa{background:var(--pri);color:var(--pri-txt)}
+.menu .grupo{font-size:.7rem;color:var(--sub);text-transform:uppercase;letter-spacing:.5px;margin:12px 12px 4px}
+@media (max-width:860px){.lado{grid-template-columns:1fr}.menu{position:static;height:auto;display:flex;overflow-x:auto;gap:4px;border-right:0;border-bottom:1px solid var(--linha)}.menu a{white-space:nowrap}.menu .grupo{display:none}}
+:focus-visible{outline:2px solid var(--pri);outline-offset:2px}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+</style>
+</head>
+<body>
+<div id="raiz"></div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2/dist/umd/supabase.js" integrity="sha384-Rj26LVGvoeRVR6+mwQmFfcR3QOBEwT+ZmuCWpuiqeTzJpCs0ER4ITAWGb4Hiy3Ok" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js" integrity="sha384-8FWZA6BGMXhsfO+BLtrJK0We6gg5o1JyO8xQm6peWDEUs17ACA5ziE/NIAkl9z2k" crossorigin="anonymous"></script>
+<script>window.MOBI_CONFIG = {};</script>
+<script>
+const CONFIG = { MARCA: 'Mobi Empresas', SUPABASE_URL: '', SUPABASE_ANON_KEY: '', URL_TERMOS: '', URL_PRIVACIDADE: '', VERSAO_TERMOS: 'v1', MODO_TESTE: false, COBRANCA_URL: '' };
+</script>
+<script>
+// ===================== NÚCLEO COMUM DOS APPS (gerado a partir de apps/src/core.js) =====================
+// Regras: o app NUNCA grava tabela direto. Tudo passa pelas funções do banco (RPC), que validam
+// permissão, saldo, limites e auditoria. O app só mostra e chama.
+// ordem: CONFIG da página ← configuração gerada no build (window.MOBI_CONFIG) ← tela de configuração (só preenche o que faltar)
+const CFG = (() => {
+  let salvo = {};
+  try { salvo = JSON.parse(localStorage.getItem('mobi_config') || '{}'); } catch (e) {}
+  const base = Object.assign({}, CONFIG, Object.fromEntries(Object.entries(window.MOBI_CONFIG || {}).filter(([, v]) => v !== '' && v !== null)));
+  return Object.assign(base, Object.fromEntries(Object.entries(salvo).filter(([k, v]) => v && !base[k])));
+})();
+const $ = (s, el = document) => el.querySelector(s);
+const $$ = (s, el = document) => [...el.querySelectorAll(s)];
+// escapa TUDO que vem do banco ou do usuário antes de ir para o HTML (contra XSS)
+const esc = (v) => String(v ?? '').replace(/[&<>"'`]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;', '`': '&#96;' }[c]));
+const reais = (v) => v === null || v === undefined || v === '' ? '—' : Number(v).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+const num = (v, c = 0) => v === null || v === undefined ? '—' : Number(v).toLocaleString('pt-BR', { minimumFractionDigits: c, maximumFractionDigits: c });
+const dataHora = (v) => v ? new Date(v).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }) : '—';
+const dataCurta = (v) => v ? new Date(v).toLocaleDateString('pt-BR') : '—';
+const uuid = () => (crypto.randomUUID ? crypto.randomUUID() : 'x' + Date.now() + Math.random().toString(16).slice(2));
+const dorme = (ms) => new Promise((r) => setTimeout(r, ms));
+const hojeISO = () => new Date().toISOString().slice(0, 10);
+
+const ERROS = {
+  CPF_INVALIDO: 'CPF inválido.', DADOS_JA_CADASTRADOS: 'Esses dados já estão em uso em outra conta.', LIMITE_EXCEDIDO: 'Muitas tentativas. Aguarde alguns minutos.',
+  JA_EXISTE_CORRIDA_ATIVA: 'Você já tem uma corrida em andamento.', PAGAMENTO_EM_ABERTO: 'Há um pagamento pendente. Pague antes de pedir outra corrida.',
+  FORA_DA_AREA_DE_ATENDIMENTO: 'Esse endereço está fora da área atendida.', CIDADE_NAO_ATENDIDA: 'Cidade ainda não atendida.',
+  CATEGORIA_INDISPONIVEL: 'Categoria indisponível nesta cidade.', DESTINO_MUITO_PROXIMO: 'Destino muito próximo da origem.',
+  SALDO_INSUFICIENTE: 'Saldo insuficiente.', SEM_PERMISSAO: 'Você não tem permissão para isso.', CONFLITO_DE_INTERESSE: 'Você não pode agir sobre o seu próprio cadastro.',
+  CORRIDA_NAO_ENCONTRADA: 'Corrida não encontrada.', STATUS_INVALIDO: 'Essa ação não vale no estado atual da corrida.',
+  CATEGORIA_SO_DE_OU_PARA_AEROPORTO: 'Essa categoria só vale de ou para o aeroporto.', CATEGORIA_SO_DE_OU_PARA_TERMINAL: 'Essa categoria só vale de ou para o terminal.',
+  CATEGORIA_SO_SAINDO_DE_EVENTO: 'Essa categoria só vale saindo de um evento cadastrado.', DESTINO_DENTRO_DO_MUNICIPIO: 'Para destino na mesma cidade, escolha outra categoria.',
+  ANTECEDENCIA_MINIMA: 'Agende com mais antecedência.', ANTECEDENCIA_MAXIMA: 'Data muito distante.', LIMITE_DE_AGENDAMENTOS: 'Você atingiu o limite de agendamentos ativos.',
+  CUPOM_INVALIDO: 'Cupom inválido.', CUPOM_EXPIRADO: 'Cupom expirado.', CUPOM_ESGOTADO: 'Cupom esgotado.', CUPOM_JA_USADO: 'Você já usou esse cupom.',
+  CUPOM_SO_PRIMEIRA_CORRIDA: 'Cupom válido só na primeira corrida.', CUPOM_NAO_VALE_NESTA_CATEGORIA: 'Cupom não vale para essa categoria.', CUPOM_NAO_VALE_NESTA_CIDADE: 'Cupom não vale nesta cidade.',
+  PENDENCIAS_DE_COMPLIANCE: 'Há pendências no seu cadastro.', OFERTA_EXPIRADA: 'A oferta expirou.', OFERTA_INDISPONIVEL: 'Oferta indisponível.',
+  LONGE_DO_EMBARQUE: 'Você ainda está longe do ponto de embarque.', GPS_DESATUALIZADO: 'Seu GPS está sem atualização. Verifique a localização.',
+  VALOR_ABAIXO_DO_MINIMO: 'Valor abaixo do mínimo para saque.', JA_ASSINANTE: 'Você já é assinante.', CNPJ_INVALIDO: 'CNPJ inválido.',
+  SEM_PERMISSAO_NA_EMPRESA: 'Sem permissão nesta empresa.', CATEGORIA_FORA_DA_POLITICA: 'Categoria fora da política da empresa.',
+  JUSTIFICATIVA_OBRIGATORIA: 'Informe a justificativa.', LIMITE_MENSAL_ATINGIDO: 'Limite mensal atingido.', LIMITE_DE_CREDITO_DA_EMPRESA: 'Limite de crédito da empresa atingido.',
+  EMPRESA_COM_FATURA_VENCIDA: 'A empresa tem fatura vencida.', CONTEXTO_INSUFICIENTE: 'Para bloquear, confirme um sinal ou detalhe a evidência.',
+  ASSUMA_O_INCIDENTE_ANTES: 'Assuma o incidente antes de agir.', NOTIFICACAO_ESSENCIAL: 'Esse aviso é essencial e não pode ser desligado.',
+  CORRIDA_EM_ANDAMENTO: 'Termine a corrida em andamento antes.', SAQUE_SEU_SALDO_ANTES: 'Saque seu saldo antes de excluir a conta.',
+  CADASTRO_INCOMPLETO: 'Complete seu cadastro.', 'JWT expired': 'Sua sessão expirou. Entre de novo.',
+};
+function mensagemErro(e) {
+  const cod = (e && (e.message || e.code)) || String(e);
+  if (ERROS[cod]) return ERROS[cod] + (e.details && !/^[A-Z_]+$/.test(e.details) ? ' (' + e.details + ')' : '');
+  if (/^[A-Z0-9_]+$/.test(cod)) { const t = cod.toLowerCase().replace(/_/g, ' '); return t.charAt(0).toUpperCase() + t.slice(1) + '.'; }
+  if (/Failed to fetch|NetworkError/i.test(cod)) return 'Sem conexão. Verifique a internet.';
+  return cod;
+}
+
+let sb = null;
+function iniciarSupabase() {
+  if (!CFG.SUPABASE_URL || !CFG.SUPABASE_ANON_KEY) return false;
+  sb = window.supabase.createClient(CFG.SUPABASE_URL, CFG.SUPABASE_ANON_KEY, { auth: { persistSession: true, autoRefreshToken: true, storageKey: 'mobi-auth' } });
+  sb.auth.onAuthStateChange((evento) => {
+    if (evento === 'PASSWORD_RECOVERY') telaNovaSenha();          // veio do link "esqueci a senha"
+    if (evento === 'TOKEN_REFRESHED' || evento === 'SIGNED_IN') atualizarTokenSW();
+  });
+  return true;
+}
+// aviso fixo de conexão (some sozinho quando a rede volta)
+function avisoRede(on, texto = 'Sem conexão. Tentando de novo…') {
+  let b = document.getElementById('aviso-rede');
+  if (!on) { if (b) b.remove(); return; }
+  if (!b) { b = document.createElement('div'); b.id = 'aviso-rede'; b.setAttribute('role', 'alert');
+    b.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:200;background:var(--perigo);color:#fff;text-align:center;padding:6px;font-size:.85rem';
+    document.body.appendChild(b); }
+  b.textContent = texto;
+}
+window.addEventListener('online', () => avisoRede(false));
+window.addEventListener('offline', () => avisoRede(true));
+let sessaoExpirada = false;
+async function api(fn, args = {}) {
+  let res;
+  try { res = await sb.rpc(fn, args); }
+  catch (e) { avisoRede(true); throw new Error('Failed to fetch'); }
+  const { data, error, status } = res;
+  if (error) {
+    if (/Failed to fetch|NetworkError|fetch failed/i.test(error.message || '')) avisoRede(true); else avisoRede(false);
+    // sessão vencida/inválida: volta para o login em vez de mostrar telas vazias
+    if ((status === 401 || /JWT expired|invalid JWT|PGRST30/i.test(error.message + ' ' + (error.code || ''))) && !sessaoExpirada) {
+      sessaoExpirada = true; toast('Sua sessão expirou. Entre de novo.', true);
+      setTimeout(async () => { await sb.auth.signOut({ scope: 'local' }).catch(() => {}); location.reload(); }, 1500);
+    }
+    const e = new Error(error.message); e.details = error.details; e.code = error.code; throw e;
+  }
+  avisoRede(false);
+  return data;
+}
+// erros inesperados das telas vão para a equipe (sem dados pessoais: só mensagem e tela)
+let errosEnviados = 0;
+window.addEventListener('error', (ev) => reportarErro(ev.message, { arquivo: ev.filename, linha: ev.lineno }));
+window.addEventListener('unhandledrejection', (ev) => reportarErro(String(ev.reason && ev.reason.message || ev.reason), {}));
+function reportarErro(msg, ctx) {
+  if (!sb || errosEnviados++ > 5 || !msg) return;
+  sb.rpc('registrar_erro_app', { p_app: location.pathname.split('/').pop() || 'index', p_mensagem: String(msg).slice(0, 400), p_contexto: { ...ctx, tela: location.hash } }).then(() => {}, () => {});
+}
+async function tabela(nome, monta) {
+  let qb = sb.from(nome).select(monta.select || '*');
+  if (monta.where) qb = monta.where(qb);
+  const { data, error } = await qb;
+  if (error) throw new Error(error.message);
+  return data;
+}
+
+let toastTimer;
+function toast(msg, erro = false) {
+  let t = $('#toast'); if (!t) { t = document.createElement('div'); t.id = 'toast'; t.setAttribute('role', 'status'); document.body.appendChild(t); }
+  t.textContent = msg; t.className = 'on' + (erro ? ' erro' : '');
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => (t.className = ''), erro ? 5200 : 3000);
+}
+// executa ação de botão com trava (evita clique duplo) e mensagem de erro amigável
+async function acao(botao, fn) {
+  if (botao && botao.disabled) return;
+  const txt = botao ? botao.innerHTML : '';
+  if (botao) { botao.disabled = true; botao.innerHTML = '<span class="carregando"></span>'; }
+  try { return await fn(); }
+  catch (e) { console.error(e); toast(mensagemErro(e), true); }
+  finally { if (botao) { botao.disabled = false; botao.innerHTML = txt; } }
+}
+function modal(html, aoAbrir) {
+  const f = document.createElement('div'); f.className = 'modal-fundo';
+  f.innerHTML = `<div class="modal" role="dialog" aria-modal="true" tabindex="-1">${html}</div>`;
+  f.addEventListener('click', (ev) => { if (ev.target === f) fechar(); });
+  const anterior = document.activeElement;
+  const esc_ = (ev) => { if (ev.key === 'Escape') fechar(); };
+  const fechar = () => { f.remove(); document.removeEventListener('keydown', esc_); if (anterior && anterior.focus) anterior.focus(); };
+  document.addEventListener('keydown', esc_);
+  document.body.appendChild(f);
+  setTimeout(() => { const alvo = f.querySelector('input,select,textarea,button') || f.querySelector('.modal'); alvo && alvo.focus(); }, 0);
+  $$('[data-fechar]', f).forEach((b) => b.addEventListener('click', fechar));
+  if (aoAbrir) aoAbrir(f, fechar);
+  return fechar;
+}
+function confirmar(texto, okTxt = 'Confirmar', perigo = false) {
+  return new Promise((res) => {
+    modal(`<p>${esc(texto)}</p><div class="linha"><button class="sec cresce" data-fechar>Voltar</button><button class="cresce ${perigo ? 'perigo' : ''}" id="ok-conf">${esc(okTxt)}</button></div>`,
+      (f, fechar) => { $('#ok-conf', f).onclick = () => { fechar(); res(true); }; $$('[data-fechar]', f).forEach((b) => b.addEventListener('click', () => res(false))); });
+  });
+}
+function baixar(nome, conteudo, tipo = 'application/json') {
+  const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([conteudo], { type: tipo })); a.download = nome; a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+}
+function posicaoAtual(timeout = 8000) {
+  return new Promise((res) => {
+    if (!navigator.geolocation) return res(null);
+    navigator.geolocation.getCurrentPosition((p) => res({ lat: p.coords.latitude, lng: p.coords.longitude, precisao: p.coords.accuracy }), () => res(null),
+      { enableHighAccuracy: true, timeout, maximumAge: 10000 });
+  });
+}
+// gráfico de barras/linhas em SVG (sem biblioteca)
+function grafico(series, { altura = 160, tipo = 'barra', rotulos = [], formato = (v) => num(v) } = {}) {
+  const vals = series.flatMap((s) => s.valores.map(Number).filter((v) => Number.isFinite(v)));
+  const max = Math.max(1, ...vals), min = Math.min(0, ...vals), L = 600, A = altura, m = 22, n = Math.max(1, series[0]?.valores.length || 1);
+  const y = (v) => A - m - ((v - min) / (max - min || 1)) * (A - 2 * m);
+  const larg = (L - 2 * m) / n;
+  let s = `<svg class="grafico" viewBox="0 0 ${L} ${A}" role="img"><line x1="${m}" x2="${L - m}" y1="${y(0)}" y2="${y(0)}" stroke="currentColor" opacity=".2"/>`;
+  series.forEach((ser, k) => {
+    if (tipo === 'barra') ser.valores.forEach((v, i) => {
+      const bw = larg / series.length * .8, x = m + i * larg + k * bw + larg * .1, yv = y(Math.max(0, v)), h = Math.abs(y(v) - y(0));
+      s += `<rect x="${x}" y="${v >= 0 ? yv : y(0)}" width="${bw}" height="${Math.max(h, .5)}" rx="2" fill="${ser.cor || 'var(--pri)'}"><title>${esc((rotulos[i] || '') + ': ' + formato(v))}</title></rect>`;
+    });
+    else s += `<polyline fill="none" stroke="${ser.cor || 'var(--pri)'}" stroke-width="2.5" points="${ser.valores.map((v, i) => `${m + i * larg + larg / 2},${y(v)}`).join(' ')}"/>`;
+  });
+  const passo = Math.ceil(n / 8);
+  rotulos.forEach((r, i) => { if (i % passo === 0) s += `<text x="${m + i * larg + larg / 2}" y="${A - 6}" text-anchor="middle">${esc(r)}</text>`; });
+  s += `<text x="${m}" y="12">${esc(formato(max))}</text></svg>`;
+  return s;
+}
+// tela de configuração (primeiro uso): URL e chave pública do Supabase
+function telaConfiguracao(alvo) {
+  alvo.innerHTML = `<div class="app"><h1>Configurar o app</h1>
+    <p class="sub">Informe os dados do projeto Supabase (Configurações → API). A chave <b>anon</b> é pública por natureza; a segurança está nas regras do banco.</p>
+    <label>URL do projeto</label><input id="cfg-url" placeholder="https://xxxx.supabase.co">
+    <label>Chave anon (public)</label><input id="cfg-chave" placeholder="eyJ...">
+    <p></p><button class="cheio" id="cfg-ok">Salvar</button>
+    <p class="sub peq">Para publicar, preencha o bloco CONFIG no topo do arquivo HTML em vez de usar esta tela.</p></div>`;
+  $('#cfg-ok').onclick = () => {
+    localStorage.setItem('mobi_config', JSON.stringify({ SUPABASE_URL: $('#cfg-url').value.trim(), SUPABASE_ANON_KEY: $('#cfg-chave').value.trim() }));
+    location.reload();
+  };
+}
+// ---------- login / cadastro (Supabase Auth) ----------
+function telaLogin(alvo, { titulo, aoEntrar, permitirCadastro = true }) {
+  alvo.innerHTML = `<div class="app"><h1>${esc(titulo)}</h1>
+    <div class="card"><label for="lg-email">E-mail</label><input id="lg-email" type="email" autocomplete="email">
+    <label for="lg-senha">Senha</label><input id="lg-senha" type="password" autocomplete="current-password" minlength="8">
+    <p></p><button class="cheio" id="lg-entrar">Entrar</button>
+    ${permitirCadastro ? '<p></p><button class="cheio sec" id="lg-criar">Criar conta</button>' : ''}
+    <p class="cent"><a href="#" id="lg-esqueci">Esqueci a senha</a></p></div></div>`;
+  const email = () => $('#lg-email').value.trim(), senha = () => $('#lg-senha').value;
+  $('#lg-entrar').onclick = (ev) => acao(ev.currentTarget, async () => {
+    const { error } = await sb.auth.signInWithPassword({ email: email(), password: senha() });
+    if (error) throw new Error(/Invalid login/i.test(error.message) ? 'E-mail ou senha incorretos.' : error.message);
+    aoEntrar();
+  });
+  if (permitirCadastro) $('#lg-criar').onclick = (ev) => acao(ev.currentTarget, async () => {
+    if (senha().length < 8) throw new Error('A senha precisa ter pelo menos 8 caracteres.');
+    const { data, error } = await sb.auth.signUp({ email: email(), password: senha() });
+    if (error) throw new Error(error.message);
+    if (!data.session) { toast('Enviamos um link de confirmação para o seu e-mail.'); return; }
+    aoEntrar();
+  });
+  $('#lg-esqueci').onclick = async (ev) => {
+    ev.preventDefault();
+    if (!email()) return toast('Digite seu e-mail primeiro.', true);
+    await sb.auth.resetPasswordForEmail(email(), { redirectTo: location.href.split('#')[0] });
+    toast('Se o e-mail existir, enviamos o link para criar nova senha.');
+  };
+}
+async function sair() {
+  await sb.auth.signOut().catch(() => {}); localStorage.removeItem('mobi-auth');
+  try { if ('caches' in window) await caches.delete('mobi-config'); } catch (e) {}   // o aparelho não guarda mais o acesso
+  location.hash = ''; location.reload();
+}
+// link do e-mail "esqueci a senha": o usuário define a nova senha aqui
+function telaNovaSenha() {
+  modal(`<h2>Criar nova senha</h2><label for="ns-1">Nova senha (mín. 8)</label><input id="ns-1" type="password" autocomplete="new-password" minlength="8">
+    <label for="ns-2">Repita a senha</label><input id="ns-2" type="password" autocomplete="new-password"><p></p><button class="cheio" id="ns-ok">Salvar senha</button>`, (f, fechar) => {
+    $('#ns-ok', f).onclick = (ev) => acao(ev.currentTarget, async () => {
+      const a = $('#ns-1', f).value; if (a.length < 8) throw new Error('A senha precisa ter pelo menos 8 caracteres.'); if (a !== $('#ns-2', f).value) throw new Error('As senhas não conferem.');
+      const { error } = await sb.auth.updateUser({ password: a }); if (error) throw new Error(error.message);
+      fechar(); toast('Senha alterada.'); });
+  });
+}
+async function usuarioAtual() { const { data } = await sb.auth.getSession(); return data.session ? data.session.user : null; }
+
+// formulário de "completar cadastro" (perfil da plataforma)
+async function telaCompletarCadastro(alvo, { motorista = false, aoConcluir }) {
+  const cidades = await tabela('cidades', { select: 'id,nome,uf,centro_lat,centro_lng', where: (q) => q.eq('ativa', true).order('nome') });
+  const codigoUrl = new URLSearchParams(location.search).get('codigo') || localStorage.getItem('mobi_codigo') || '';
+  const u = await usuarioAtual();
+  alvo.innerHTML = `<div class="app"><h1>Complete seu cadastro</h1><div class="card">
+    <label for="cc-nome">Nome completo</label><input id="cc-nome" autocomplete="name">
+    <label for="cc-tel">Celular (com DDD)</label><input id="cc-tel" inputmode="tel" autocomplete="tel" placeholder="21 99999-9999">
+    <label for="cc-cpf">CPF</label><input id="cc-cpf" inputmode="numeric" placeholder="000.000.000-00">
+    <label for="cc-cidade">Cidade</label><select id="cc-cidade">${cidades.map((c) => `<option value="${c.id}">${esc(c.nome)} – ${esc(c.uf)}</option>`).join('')}</select>
+    <label for="cc-cod">Código de indicação (opcional)</label><input id="cc-cod" value="${esc(codigoUrl)}">
+    <label class="chk"><input type="checkbox" id="cc-termos"> Li e aceito os <a href="${esc(CFG.URL_TERMOS || '#')}" target="_blank" rel="noopener">Termos de Uso</a></label>
+    <label class="chk"><input type="checkbox" id="cc-priv"> Li e aceito a <a href="${esc(CFG.URL_PRIVACIDADE || '#')}" target="_blank" rel="noopener">Política de Privacidade</a> (inclui uso da localização durante as corridas)</label>
+    <label class="chk"><input type="checkbox" id="cc-mkt"> Quero receber promoções (opcional, pode desligar quando quiser)</label>
+    <p></p><button class="cheio" id="cc-ok">Continuar</button></div></div>`;
+  $('#cc-ok').onclick = (ev) => acao(ev.currentTarget, async () => {
+    if (!$('#cc-termos').checked || !$('#cc-priv').checked) throw new Error('É preciso aceitar os Termos e a Política de Privacidade.');
+    const r = await api('completar_cadastro', {
+      p_nome: $('#cc-nome').value.trim(), p_telefone: $('#cc-tel').value, p_cpf: $('#cc-cpf').value, p_email: u.email,
+      p_cidade: $('#cc-cidade').value, p_quer_ser_motorista: motorista, p_codigo_indicacao: $('#cc-cod').value.trim() || null,
+      p_dispositivo: dispositivoId(), p_versao_termos: CFG.VERSAO_TERMOS || 'v1',
+    });
+    if (r && r.ok === false) throw new Error(r.erro);
+    await api('registrar_consentimento', { p_tipo: 'TERMOS', p_versao: CFG.VERSAO_TERMOS || 'v1', p_aceito: true });
+    await api('registrar_consentimento', { p_tipo: 'PRIVACIDADE', p_versao: CFG.VERSAO_TERMOS || 'v1', p_aceito: true });
+    await api('registrar_consentimento', { p_tipo: 'MARKETING', p_versao: CFG.VERSAO_TERMOS || 'v1', p_aceito: $('#cc-mkt').checked });
+    if (r && r.aviso_indicacao) toast(r.aviso_indicacao);
+    aoConcluir();
+  });
+}
+function dispositivoId() {
+  let d = localStorage.getItem('mobi_dispositivo');
+  if (!d) { d = uuid(); localStorage.setItem('mobi_dispositivo', d); }
+  return d;
+}
+// notificações push (PWA): o toque chega sem texto, o service worker busca pela API
+async function ativarPush() {
+  if (!('serviceWorker' in navigator) || !('PushManager' in window) || !CFG.VAPID_PUBLICA) throw new Error('Este navegador não suporta notificações ou o push não foi configurado.');
+  const perm = await Notification.requestPermission();
+  if (perm !== 'granted') throw new Error('Permissão de notificação negada.');
+  const reg = await navigator.serviceWorker.register('/sw.js');
+  const chave = Uint8Array.from(atob(CFG.VAPID_PUBLICA.replace(/-/g, '+').replace(/_/g, '/') + '==='.slice((CFG.VAPID_PUBLICA.length + 3) % 4)), (c) => c.charCodeAt(0));
+  const sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: chave });
+  const j = sub.toJSON();
+  await api('registrar_push', { p_endpoint: j.endpoint, p_p256dh: j.keys.p256dh, p_auth: j.keys.auth, p_navegador: navigator.userAgent.slice(0, 80) });
+  await atualizarTokenSW();
+  toast('Notificações ativadas.');
+}
+// o service worker busca o texto das notificações com o login do usuário (guardado só neste aparelho)
+async function atualizarTokenSW() {
+  try {
+    if (!('caches' in window)) return;
+    const s = (await sb.auth.getSession()).data.session;
+    const c = await caches.open('mobi-config');
+    await c.put('/__mobi_config', new Response(JSON.stringify({ url: CFG.SUPABASE_URL, anon: CFG.SUPABASE_ANON_KEY, token: s ? s.access_token : null, app: location.pathname })));
+  } catch (e) {}
+}
+async function registrarAcesso() { try { await api('registrar_acesso', { p_dispositivo: dispositivoId(), p_plataforma: 'WEB' }); } catch (e) {} }
+// mapa (Leaflet + OpenStreetMap). Em produção, troque o provedor de mapa em CONFIG.MAPA_TILES.
+function criarMapa(el, centro, zoom = 14) {
+  const m = L.map(el, { zoomControl: true, attributionControl: true }).setView([centro.lat, centro.lng], zoom);
+  L.tileLayer(CFG.MAPA_TILES || 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: CFG.MAPA_ATRIBUICAO || '&copy; OpenStreetMap' }).addTo(m);
+  return m;
+}
+const corNivel = { ALTA: '#c62828', MODERADA: '#e07b00', NORMAL: '#1f7a3a', BAIXA: '#7a8594' };
+// busca de endereço (geocodificação). Padrão: Nominatim (OSM) com limite de 1 req/s — em produção use um provedor contratado.
+let geoTimer;
+function buscarEndereco(texto, perto) {
+  return new Promise((res) => {
+    clearTimeout(geoTimer);
+    geoTimer = setTimeout(async () => {
+      if (!texto || texto.length < 4) return res([]);
+      try {
+        const url = (CFG.GEOCODER_URL || 'https://nominatim.openstreetmap.org/search') + '?format=json&addressdetails=0&limit=6&countrycodes=br&q=' + encodeURIComponent(texto)
+          + (perto ? `&viewbox=${perto.lng - .3},${perto.lat + .3},${perto.lng + .3},${perto.lat - .3}` : '');
+        const r = await fetch(url, { headers: { 'Accept-Language': 'pt-BR' } });
+        res((await r.json()).map((x) => ({ nome: x.display_name, lat: +x.lat, lng: +x.lon })));
+      } catch (e) { res([]); }
+    }, 700);
+  });
+}
+// ---------- cobrança online (PIX copia-e-cola / link de cartão) ----------
+async function obterCobranca(pagamentoId) {
+  let c = await api('minha_cobranca', { p_pagamento: pagamentoId });
+  if (c.status === 'PENDENTE' && !c.cobranca && CFG.COBRANCA_URL) {
+    const s = (await sb.auth.getSession()).data.session;
+    const r = await fetch(CFG.COBRANCA_URL, { method: 'POST', headers: { Authorization: 'Bearer ' + s.access_token, apikey: CFG.SUPABASE_ANON_KEY, 'Content-Type': 'application/json' }, body: JSON.stringify({ pagamento_id: pagamentoId }) });
+    if (!r.ok) { const j = await r.json().catch(() => ({})); throw new Error(j.erro || 'Não foi possível gerar a cobrança agora.'); }
+    c = await api('minha_cobranca', { p_pagamento: pagamentoId });
+  }
+  return c;
+}
+function htmlCobranca(c) {
+  if (!c || c.status !== 'PENDENTE') return '';
+  const cb = c.cobranca || {};
+  if (cb.pix_copia_cola) return `<div class="cent"><div id="qr-pix" style="display:inline-block;background:#fff;padding:8px;border-radius:10px"></div></div>
+      <label for="pix-cc">PIX copia e cola</label><div class="linha"><input id="pix-cc" class="cresce" readonly value="${esc(cb.pix_copia_cola)}"><button class="mini" id="pix-copiar">Copiar</button></div>
+      ${cb.expira_em ? `<div class="sub peq">Válido até ${dataHora(cb.expira_em)}</div>` : ''}`;
+  if (cb.link) return `<a class="btn cheio" href="${esc(cb.link)}" target="_blank" rel="noopener">Pagar com cartão</a>`;
+  return CFG.COBRANCA_URL ? '<div class="sub">Gerando cobrança…</div>' : '<div class="sub">Pagamento online ainda não configurado nesta instalação.</div>';
+}
+function ligarCobranca(el) {
+  const inp = $('#pix-cc', el); if (!inp) return;
+  try { if (window.qrcode) { const q = qrcode(0, 'M'); q.addData(inp.value); q.make(); $('#qr-pix', el).innerHTML = q.createSvgTag({ cellSize: 4, margin: 2 }); } } catch (e) {}
+  $('#pix-copiar', el).onclick = async () => { await navigator.clipboard.writeText(inp.value).catch(() => { inp.select(); document.execCommand('copy'); }); toast('Código PIX copiado.'); };
+}
+// ===================== fim do núcleo =====================
+
+</script>
+<script>
+// =================== PORTAL DA EMPRESA (gestor / financeiro) ===================
+const raiz = $('#raiz');
+const X = { empresas: [], atual: null, rel: null };
+function casca(conteudo, aba) {
+  const e = X.empresas.find((x) => x.empresa === X.atual);
+  raiz.innerHTML = `<div class="topo"><span class="marca">${esc(CFG.MARCA)}</span>
+      ${X.empresas.length > 1 ? `<select id="troca" style="max-width:220px">${X.empresas.map((x) => `<option value="${x.empresa}" ${x.empresa === X.atual ? 'selected' : ''}>${esc(x.nome)}</option>`).join('')}</select>` : `<span class="sub">${esc(e ? e.nome : '')}</span>`}
+      <span class="esp"></span><button class="mini sec" onclick="sair()">Sair</button></div>
+    <div class="app largo" id="conteudo">${e ? `<div class="chips">${[['resumo', 'Resumo'], ['equipe', 'Equipe'], ['estrutura', 'Políticas e estrutura'], ['faturas', 'Faturas'], ['exportar', 'Exportar']]
+      .map(([k, t]) => `<button ${aba === k ? 'style="border-color:var(--pri);color:var(--pri)"' : ''} onclick="location.hash='#${k}'">${t}</button>`).join('')}</div>` : ''}${conteudo}</div>`;
+  const t = $('#troca'); if (t) t.onchange = () => { X.atual = t.value; rotear(); };
+}
+async function iniciar() {
+  if (!iniciarSupabase()) return telaConfiguracao(raiz);
+  const u = await usuarioAtual();
+  if (!u) return telaLogin(raiz, { titulo: 'Mobi Empresas — entrar', aoEntrar: iniciar });
+  const p = await api('meu_perfil').catch(() => null);
+  if (!p || !p.perfil) return telaCompletarCadastro(raiz, { aoConcluir: iniciar });
+  X.empresas = (await api('minhas_empresas')).filter((e) => ['GESTOR', 'FINANCEIRO'].includes(e.papel));
+  if (!X.empresas.length) return telaCadastrarEmpresa();
+  X.atual = X.atual || X.empresas[0].empresa;
+  window.onhashchange = rotear; rotear();
+}
+function rotear() {
+  const r = (location.hash || '#resumo').slice(1);
+  ({ resumo: telaResumo, equipe: telaEquipe, estrutura: telaEstrutura, faturas: telaFaturas, exportar: telaExportar }[r] || telaResumo)();
+}
+const periodoMes = () => { const a = new Date(); return { ini: new Date(a.getFullYear(), a.getMonth(), 1).toISOString(), fim: new Date(a.getFullYear(), a.getMonth() + 1, 1).toISOString() }; };
+async function relatorio(ini, fim) { return api('empresa_relatorio', { p_empresa: X.atual, p_inicio: ini, p_fim: fim }); }
+
+async function telaCadastrarEmpresa() {
+  const cidades = await tabela('cidades', { select: 'id,nome,uf', where: (q) => q.eq('ativa', true).order('nome') });
+  casca(`<h1>Cadastrar empresa</h1><div class="card">
+    <label>Razão social</label><input id="e-razao"><label>Nome fantasia</label><input id="e-fant"><label>CNPJ</label><input id="e-cnpj" inputmode="numeric">
+    <label>Cidade principal</label><select id="e-cid">${cidades.map((c) => `<option value="${c.id}">${esc(c.nome)} – ${esc(c.uf)}</option>`).join('')}</select>
+    <label>E-mail do financeiro</label><input id="e-mail" type="email"><p></p><button class="cheio" id="e-ok">Enviar para análise</button>
+    <p class="sub peq">Depois da análise de crédito pela nossa equipe, a empresa fica ativa e seus funcionários podem pedir corridas corporativas.</p></div>`);
+  $('#e-ok').onclick = (ev) => acao(ev.currentTarget, async () => {
+    await api('empresa_cadastrar', { p_razao: $('#e-razao').value, p_fantasia: $('#e-fant').value, p_cnpj: $('#e-cnpj').value, p_cidade: $('#e-cid').value, p_email_financeiro: $('#e-mail').value });
+    toast('Empresa cadastrada. Aguarde a aprovação.'); iniciar();
+  });
+}
+async function telaResumo() {
+  casca('<div id="r"><span class="carregando"></span></div>', 'resumo');
+  const { ini, fim } = periodoMes();
+  const r = X.rel = await relatorio(ini, fim);
+  const e = r.empresa;
+  const tab = (titulo, linhas, rot) => `<div class="card"><h2>${titulo}</h2><div class="rolar"><table><tr><th>${rot}</th><th>Corridas</th><th>Valor</th></tr>
+    ${linhas.map((l) => `<tr><td>${esc(l.departamento || l.centro || l.funcionario)}</td><td>${num(l.corridas)}</td><td>${reais(l.valor)}</td></tr>`).join('') || '<tr><td colspan="3" class="sub">Sem corridas no mês.</td></tr>'}</table></div></div>`;
+  $('#r').innerHTML = `<h1>${esc(e.nome)} <span class="pilula ${esc(e.status)}">${esc(e.status)}</span></h1>
+    ${e.status === 'PENDENTE' ? '<div class="aviso">Cadastro em análise pela nossa equipe financeira.</div>' : ''}
+    <div class="grade"><div class="kpi"><div class="r">Corridas no mês</div><div class="v">${num(r.totais.corridas)}</div></div>
+      <div class="kpi"><div class="r">Gasto no mês</div><div class="v">${reais(r.totais.valor)}</div></div>
+      <div class="kpi"><div class="r">Ticket médio</div><div class="v">${reais(r.totais.ticket_medio)}</div></div>
+      <div class="kpi"><div class="r">Em aberto / limite</div><div class="v" style="font-size:1rem">${reais(e.em_aberto)} / ${reais(e.limite_credito)}</div>
+        <div class="barra"><i style="width:${Math.min(100, (e.em_aberto / Math.max(e.limite_credito, 1)) * 100)}%"></i></div></div></div>
+    ${tab('Por departamento', r.por_departamento, 'Departamento')}${tab('Por centro de custo', r.por_centro_custo, 'Centro de custo')}${tab('Por funcionário', r.por_funcionario, 'Funcionário')}`;
+}
+async function telaEquipe() {
+  casca('<div id="r"><span class="carregando"></span></div>', 'equipe');
+  const { ini, fim } = periodoMes(); const r = await relatorio(ini, fim);
+  $('#r').innerHTML = `<h1>Equipe</h1><div class="card"><h2>Convidar pessoa</h2><p class="sub">Por celular ou e-mail. A pessoa recebe o convite no app (com o contato verificado) e decide se aceita.</p>
+    <div class="grade"><div><label>Celular ou e-mail</label><input id="m-cont"></div><div><label>Papel</label><select id="m-papel"><option value="FUNCIONARIO">Funcionário</option><option value="FINANCEIRO">Financeiro</option><option value="GESTOR">Gestor</option></select></div>
+      <div><label>Departamento</label><select id="m-dep"><option value="">—</option>${r.departamentos.map((d) => `<option value="${d.id}">${esc(d.nome)}</option>`).join('')}</select></div>
+      <div><label>Centro de custo</label><select id="m-cc"><option value="">—</option>${r.centros_custo.map((c) => `<option value="${c.id}">${esc(c.codigo + ' ' + c.nome)}</option>`).join('')}</select></div>
+      <div><label>Limite mensal (opcional)</label><input id="m-lim" type="number" step="0.01"></div></div><p></p><button id="m-ok">Adicionar</button></div>
+    <div class="card rolar"><table><tr><th>Nome</th><th>Papel</th><th>Departamento</th><th>Limite</th><th></th></tr>
+      ${r.membros.map((m) => `<tr><td>${esc(m.nome)}</td><td>${esc(m.papel)}</td><td>${esc(m.departamento || '—')}</td><td>${m.limite_mensal ? reais(m.limite_mensal) : 'política'}</td>
+        <td>${m.ativo ? `<button class="mini sec" data-rem="${m.usuario}">Remover</button>` : '<span class="pilula">inativo</span>'}</td></tr>`).join('')}</table></div>`;
+  $('#m-ok').onclick = (ev) => acao(ev.currentTarget, async () => {
+    const r2 = await api('empresa_adicionar_membro', { p_empresa: X.atual, p_contato: $('#m-cont').value, p_papel: $('#m-papel').value, p_departamento: $('#m-dep').value || null,
+      p_centro_custo: $('#m-cc').value || null, p_limite_mensal: $('#m-lim').value ? +$('#m-lim').value : null });
+    toast('Convite enviado. A pessoa aceita ao entrar no app com esse contato.'); telaEquipe();
+  });
+  $$('[data-rem]').forEach((b) => (b.onclick = (ev) => acao(ev.currentTarget, async () => { if (await confirmar('Remover esta pessoa da empresa?', 'Remover', true)) { await api('empresa_remover_membro', { p_empresa: X.atual, p_usuario: b.dataset.rem }); telaEquipe(); } })));
+}
+const CATS = ['ECONOMICO', 'CONFORTO', 'PREMIUM', 'SETE_LUGARES', 'AEROPORTO', 'ACESSIVEL'];
+async function telaEstrutura() {
+  casca('<div id="r"><span class="carregando"></span></div>', 'estrutura');
+  const { ini, fim } = periodoMes(); const r = await relatorio(ini, fim);
+  $('#r').innerHTML = `<h1>Políticas e estrutura</h1>
+    ${r.politicas.map((p) => `<div class="card" data-pol="${p.id}"><h2>Política: ${esc(p.nome)} ${p.ativa ? '' : '<span class="pilula">inativa</span>'}</h2>
+      <div class="grade"><div><label>Nome</label><input data-k="nome" value="${esc(p.nome)}"></div>
+        <div><label>Departamento</label><select data-k="departamento_id"><option value="">Todos</option>${r.departamentos.map((d) => `<option value="${d.id}" ${d.id === p.departamento_id ? 'selected' : ''}>${esc(d.nome)}</option>`).join('')}</select></div>
+        <div><label>Limite por corrida (R$)</label><input data-k="limite_por_corrida" type="number" step="0.01" value="${esc(p.limite_por_corrida ?? '')}"></div>
+        <div><label>Limite mensal por pessoa (R$)</label><input data-k="limite_mensal_por_pessoa" type="number" step="0.01" value="${esc(p.limite_mensal_por_pessoa ?? '')}"></div>
+        <div><label>Horário de início</label><input data-k="hora_inicio" type="time" value="${esc((p.hora_inicio || '').slice(0, 5))}"></div>
+        <div><label>Horário de fim</label><input data-k="hora_fim" type="time" value="${esc((p.hora_fim || '').slice(0, 5))}"></div></div>
+      <label>Categorias permitidas</label><div class="chips">${CATS.map((c) => `<label class="chk" style="margin:0 8px 0 0"><input type="checkbox" data-cat value="${c}" ${p.categorias_permitidas.includes(c) ? 'checked' : ''}> ${c}</label>`).join('')}</div>
+      <label>Dias permitidos (vazio = todos)</label><div class="chips">${['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'].map((d, i) => `<label class="chk" style="margin:0 8px 0 0"><input type="checkbox" data-dia value="${i + 1}" ${(p.dias_semana || []).includes(i + 1) ? 'checked' : ''}> ${d}</label>`).join('')}</div>
+      <label class="chk"><input type="checkbox" data-k="exige_justificativa" ${p.exige_justificativa ? 'checked' : ''}> Exigir justificativa</label>
+      <label class="chk"><input type="checkbox" data-k="exige_centro_custo" ${p.exige_centro_custo ? 'checked' : ''}> Exigir centro de custo</label>
+      <label class="chk"><input type="checkbox" data-k="ativa" ${p.ativa ? 'checked' : ''}> Política ativa</label>
+      <button class="mini" data-salvar>Salvar política</button></div>`).join('')}
+    <button class="sec" id="nova-pol">+ Nova política</button>
+    <div class="grade"><div class="card"><h2>Departamentos</h2><ul class="lista">${r.departamentos.map((d) => `<li>${esc(d.nome)}</li>`).join('') || '<li class="sub">Nenhum.</li>'}</ul>
+        <div class="linha"><input id="dep-nome" class="cresce" placeholder="Novo departamento"><button class="mini" id="dep-ok">Adicionar</button></div></div>
+      <div class="card"><h2>Centros de custo</h2><ul class="lista">${r.centros_custo.map((c) => `<li>${esc(c.codigo)} · ${esc(c.nome)}</li>`).join('') || '<li class="sub">Nenhum.</li>'}</ul>
+        <div class="linha"><input id="cc-cod" placeholder="Código" style="max-width:110px"><input id="cc-nome" class="cresce" placeholder="Nome"><button class="mini" id="cc-ok">Adicionar</button></div></div></div>`;
+  $$('[data-pol]').forEach((card) => ($('[data-salvar]', card).onclick = (ev) => acao(ev.currentTarget, async () => {
+    const p = { id: card.dataset.pol };
+    $$('[data-k]', card).forEach((i) => (p[i.dataset.k] = i.type === 'checkbox' ? i.checked : i.value));
+    p.categorias_permitidas = $$('[data-cat]:checked', card).map((i) => i.value);
+    const dias = $$('[data-dia]:checked', card).map((i) => +i.value); p.dias_semana = dias.length ? dias : null;
+    await api('empresa_salvar_estrutura', { p_empresa: X.atual, p_tipo: 'POLITICA', p }); toast('Política salva.'); telaEstrutura();
+  })));
+  $('#nova-pol').onclick = (ev) => acao(ev.currentTarget, async () => { await api('empresa_salvar_estrutura', { p_empresa: X.atual, p_tipo: 'POLITICA', p: { nome: 'Nova política', categorias_permitidas: ['ECONOMICO'], ativa: false } }); telaEstrutura(); });
+  $('#dep-ok').onclick = (ev) => acao(ev.currentTarget, async () => { await api('empresa_salvar_estrutura', { p_empresa: X.atual, p_tipo: 'DEPARTAMENTO', p: { nome: $('#dep-nome').value } }); telaEstrutura(); });
+  $('#cc-ok').onclick = (ev) => acao(ev.currentTarget, async () => { await api('empresa_salvar_estrutura', { p_empresa: X.atual, p_tipo: 'CENTRO_CUSTO', p: { codigo: $('#cc-cod').value, nome: $('#cc-nome').value } }); telaEstrutura(); });
+}
+async function telaFaturas() {
+  casca('<div id="r"><span class="carregando"></span></div>', 'faturas');
+  const { ini, fim } = periodoMes(); const r = await relatorio(ini, fim);
+  $('#r').innerHTML = `<h1>Faturas</h1><div class="card rolar"><table><tr><th>Período</th><th>Corridas</th><th>Valor</th><th>Vencimento</th><th>Status</th><th></th></tr>
+    ${r.faturas.map((f) => `<tr><td>${dataCurta(f.periodo_inicio)} a ${dataCurta(f.periodo_fim)}</td><td>${num(f.corridas)}</td><td>${reais(f.valor)}</td><td>${dataCurta(f.vencimento)}</td>
+      <td><span class="pilula ${esc(f.status)}">${esc(f.status)}</span></td><td>${['FECHADA', 'VENCIDA'].includes(f.status) ? `<button class="mini" data-pagar="${f.id}">Pagar (PIX)</button>` : ''}</td></tr>`).join('') || '<tr><td colspan="6" class="sub">Nenhuma fatura ainda. A fatura fecha no dia de fechamento combinado.</td></tr>'}</table></div>
+    <p class="sub peq">Fatura vencida bloqueia novas corridas corporativas até o pagamento.</p>`;
+  $$('[data-pagar]').forEach((b) => (b.onclick = (ev) => acao(ev.currentTarget, async () => {
+    const p = await api('empresa_pagar_fatura', { p_fatura: b.dataset.pagar, p_metodo: 'PIX' });
+    const cb = await obterCobranca(p.pagamento).catch(() => null);
+    modal(`<h2>Pagamento da fatura</h2><p>Valor: <b>${reais(p.valor)}</b></p>${htmlCobranca(cb)}<p class="sub peq">Assim que o banco confirmar, a fatura muda para PAGA.</p>
+      ${CFG.MODO_TESTE ? '<button class="sec cheio" id="sim">Simular pagamento (homologação)</button><p></p>' : ''}<button class="cheio" data-fechar>OK</button>`,
+      (f, fechar) => { ligarCobranca(f); const s = $('#sim', f); if (s) s.onclick = (e2) => acao(e2.currentTarget, async () => { await api('dev_simular_pagamento', { p_pagamento: p.pagamento }); fechar(); telaFaturas(); }); });
+  })));
+}
+function telaExportar() {
+  const { ini, fim } = periodoMes();
+  casca(`<h1>Exportar corridas</h1><div class="card"><div class="linha"><div class="cresce"><label>De</label><input type="date" id="x-ini" value="${ini.slice(0, 10)}"></div>
+    <div class="cresce"><label>Até (exclusive)</label><input type="date" id="x-fim" value="${fim.slice(0, 10)}"></div></div><p></p><button class="cheio" id="x-ok">Baixar CSV</button>
+    <p class="sub peq">A exportação fica registrada na auditoria.</p></div>`, 'exportar');
+  $('#x-ok').onclick = (ev) => acao(ev.currentTarget, async () => {
+    const csv = await api('empresa_exportar_csv', { p_empresa: X.atual, p_inicio: new Date($('#x-ini').value).toISOString(), p_fim: new Date($('#x-fim').value).toISOString() });
+    baixar(`corridas-${$('#x-ini').value}.csv`, '﻿' + csv, 'text/csv;charset=utf-8');
+  });
+}
+iniciar().catch((e) => { raiz.innerHTML = `<div class="app"><div class="erro">${esc(mensagemErro(e))}</div></div>`; });
+</script>
+</body>
+</html>

@@ -1,0 +1,848 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Mobi — Passageiro</title>
+<meta name="theme-color" content="#0b6bcb">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css" integrity="sha384-sHL9NAb7lN7rfvG5lfHpm643Xkcjzp4jFvuavGOndn6pjVqS6ny56CAt3nsEVT4H" crossorigin="anonymous">
+<style>
+:root{
+  --bg:#f5f6f8;--card:#ffffff;--txt:#14161a;--sub:#5d6470;--linha:#e3e6eb;--pri:#0b6bcb;--pri-txt:#ffffff;
+  --ok:#14804a;--ok-bg:#e6f4ec;--alerta:#a15c00;--alerta-bg:#fff3e0;--perigo:#c62828;--perigo-bg:#fdecec;
+  --alta:#c62828;--moderada:#e07b00;--normal:#1f7a3a;--baixa:#7a8594;
+  --raio:14px;--ok-txt:#ffffff;--perigo-txt:#ffffff;--sombra:0 1px 3px rgba(0,0,0,.08),0 4px 14px rgba(0,0,0,.05);
+  --fonte:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0f1115;--card:#181b21;--txt:#eef0f3;--sub:#a3aab5;--linha:#2a2f37;--pri:#4ea1ff;--pri-txt:#0b0d10;
+  --ok:#4cc38a;--ok-bg:#12291d;--alerta:#ffb547;--alerta-bg:#2c2312;--perigo:#ff6b6b;--perigo-bg:#2e1616;--sombra:none;--ok-txt:#0b0d10;--perigo-txt:#0b0d10}}
+:root[data-theme="dark"]{--bg:#0f1115;--card:#181b21;--txt:#eef0f3;--sub:#a3aab5;--linha:#2a2f37;--pri:#4ea1ff;--pri-txt:#0b0d10;
+  --ok:#4cc38a;--ok-bg:#12291d;--alerta:#ffb547;--alerta-bg:#2c2312;--perigo:#ff6b6b;--perigo-bg:#2e1616;--sombra:none;--ok-txt:#0b0d10;--perigo-txt:#0b0d10}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;background:var(--bg);color:var(--txt);font-family:var(--fonte);font-size:16px;line-height:1.45;-webkit-text-size-adjust:100%}
+body{min-height:100vh;overflow-x:hidden}
+a{color:var(--pri)}
+h1{font-size:1.35rem;margin:.2rem 0 .8rem}h2{font-size:1.1rem;margin:1.2rem 0 .6rem}h3{font-size:1rem;margin:.8rem 0 .4rem}
+.app{max-width:560px;margin:0 auto;padding:12px 16px 96px}
+.app.largo{max-width:1280px}
+.topo{position:sticky;top:0;z-index:20;background:var(--bg);display:flex;align-items:center;gap:10px;padding:10px 16px;border-bottom:1px solid var(--linha)}
+.topo .marca{font-weight:800;letter-spacing:.2px}
+.topo .esp{flex:1}
+.card{background:var(--card);border:1px solid var(--linha);border-radius:var(--raio);padding:14px;margin:10px 0;box-shadow:var(--sombra)}
+.linha{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.linha>.cresce{flex:1;min-width:0}
+.grade{display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}
+.kpi{background:var(--card);border:1px solid var(--linha);border-radius:12px;padding:12px}
+.kpi .v{font-size:1.35rem;font-weight:750}.kpi .r{font-size:.8rem;color:var(--sub)}
+.sub{color:var(--sub);font-size:.88rem}
+.peq{font-size:.8rem}
+.cent{text-align:center}
+.oculto{display:none!important}
+label{display:block;font-size:.85rem;color:var(--sub);margin:10px 0 4px}
+input,select,textarea{width:100%;font:inherit;color:var(--txt);background:var(--card);border:1px solid var(--linha);border-radius:10px;padding:11px 12px;min-height:44px}
+input:focus,select:focus,textarea:focus{outline:2px solid var(--pri);outline-offset:1px}
+input[type=checkbox],input[type=radio]{width:auto;min-height:0}
+.chk{display:flex;gap:8px;align-items:flex-start;margin:8px 0;color:var(--txt);font-size:.9rem}
+button,.btn{font:inherit;font-weight:650;border:0;border-radius:12px;padding:12px 16px;min-height:46px;cursor:pointer;background:var(--pri);color:var(--pri-txt);display:inline-flex;align-items:center;justify-content:center;gap:6px;text-decoration:none}
+button.sec,.btn.sec{background:transparent;color:var(--pri);border:1px solid var(--linha)}
+button.perigo,.btn.perigo{background:var(--perigo);color:var(--perigo-txt)}
+button.ok,.btn.ok{background:var(--ok);color:var(--ok-txt)}
+button.mini{min-height:34px;padding:6px 10px;font-size:.85rem;border-radius:9px}
+button:disabled{opacity:.55;cursor:not-allowed}
+button.cheio{width:100%}
+.pilula{display:inline-block;padding:2px 9px;border-radius:999px;font-size:.75rem;font-weight:700;background:var(--linha);color:var(--txt)}
+.pilula.ALTA,.pilula.CRITICA,.pilula.ALTO,.pilula.FALHOU,.pilula.BLOQUEADO,.pilula.VENCIDA{background:var(--perigo-bg);color:var(--perigo)}
+.pilula.MODERADA,.pilula.MEDIO,.pilula.PENDENTE,.pilula.ALERTA,.pilula.EM_ANALISE,.pilula.EM_ATENDIMENTO{background:var(--alerta-bg);color:var(--alerta)}
+.pilula.NORMAL,.pilula.OK,.pilula.BAIXO,.pilula.PAGA,.pilula.CONFIRMADO,.pilula.ATIVO,.pilula.ATIVA,.pilula.APROVADO{background:var(--ok-bg);color:var(--ok)}
+.pilula.BAIXA{background:var(--linha);color:var(--sub)}
+.aviso{background:var(--alerta-bg);color:var(--alerta);border-radius:10px;padding:10px 12px;font-size:.88rem;margin:8px 0}
+.info{background:var(--ok-bg);color:var(--ok);border-radius:10px;padding:10px 12px;font-size:.88rem;margin:8px 0}
+.erro{background:var(--perigo-bg);color:var(--perigo);border-radius:10px;padding:10px 12px;font-size:.88rem;margin:8px 0}
+.abas{position:fixed;left:0;right:0;bottom:0;z-index:30;background:var(--card);border-top:1px solid var(--linha);display:flex;justify-content:space-around;padding:6px 4px calc(6px + env(safe-area-inset-bottom))}
+.abas a{flex:1;text-align:center;font-size:.72rem;color:var(--sub);text-decoration:none;padding:6px 2px;border-radius:10px}
+.abas a .ic{display:block;font-size:1.25rem;line-height:1.2}
+.abas a.ativa{color:var(--pri);font-weight:700}
+.lista{list-style:none;margin:0;padding:0}
+.lista li{padding:12px 0;border-bottom:1px solid var(--linha)}
+.lista li:last-child{border-bottom:0}
+.mapa{height:46vh;min-height:260px;border-radius:var(--raio);overflow:hidden;border:1px solid var(--linha);background:var(--linha)}
+.mapa.baixo{height:34vh}
+.opcao{border:2px solid var(--linha);border-radius:12px;padding:12px;margin:8px 0;cursor:pointer;display:flex;gap:10px;align-items:center;background:var(--card)}
+.opcao.sel{border-color:var(--pri)}
+.preco{font-weight:800;font-size:1.1rem}
+.pin{font-size:2.2rem;letter-spacing:.35rem;font-weight:800;text-align:center;padding:6px 0}
+.estrelas button{background:transparent;color:var(--sub);font-size:2rem;padding:0 4px;min-height:0}
+.estrelas button.on{color:#f5a623}
+#toast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%);max-width:92vw;z-index:100;background:#222;color:#fff;padding:12px 16px;border-radius:12px;font-size:.92rem;opacity:0;pointer-events:none;transition:opacity .2s}
+#toast.on{opacity:.96}
+#toast.erro{background:var(--perigo)}
+.modal-fundo{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:90;display:flex;align-items:flex-end;justify-content:center}
+.modal{background:var(--card);color:var(--txt);width:100%;max-width:560px;max-height:88vh;overflow:auto;border-radius:18px 18px 0 0;padding:18px 16px calc(18px + env(safe-area-inset-bottom))}
+@media (min-width:700px){.modal-fundo{align-items:center}.modal{border-radius:18px}}
+.carregando{display:inline-block;width:18px;height:18px;border:2px solid var(--linha);border-top-color:var(--pri);border-radius:50%;animation:gira .8s linear infinite;vertical-align:middle}
+@keyframes gira{to{transform:rotate(360deg)}}
+table{width:100%;border-collapse:collapse;font-size:.88rem}
+th,td{text-align:left;padding:8px 6px;border-bottom:1px solid var(--linha);vertical-align:top}
+th{color:var(--sub);font-weight:600;font-size:.78rem;text-transform:uppercase;letter-spacing:.3px}
+.rolar{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.chat{display:flex;flex-direction:column;gap:8px}
+.bolha{max-width:85%;padding:10px 12px;border-radius:14px;font-size:.93rem;white-space:pre-wrap}
+.bolha.eu{align-self:flex-end;background:var(--pri);color:var(--pri-txt);border-bottom-right-radius:4px}
+.bolha.ia{align-self:flex-start;background:var(--card);border:1px solid var(--linha);border-bottom-left-radius:4px}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}
+.chips button{min-height:34px;padding:6px 10px;font-size:.82rem;background:var(--card);color:var(--txt);border:1px solid var(--linha);font-weight:500}
+.barra{height:8px;border-radius:99px;background:var(--linha);overflow:hidden}
+.barra>i{display:block;height:100%;background:var(--pri)}
+svg.grafico{width:100%;height:auto;display:block}
+svg.grafico text{fill:var(--sub);font-size:10px}
+.lado{display:grid;grid-template-columns:220px 1fr;gap:0;min-height:100vh}
+.menu{background:var(--card);border-right:1px solid var(--linha);padding:12px 8px;position:sticky;top:0;height:100vh;overflow:auto}
+.menu a{display:block;padding:9px 12px;border-radius:9px;color:var(--txt);text-decoration:none;font-size:.92rem}
+.menu a.ativa{background:var(--pri);color:var(--pri-txt)}
+.menu .grupo{font-size:.7rem;color:var(--sub);text-transform:uppercase;letter-spacing:.5px;margin:12px 12px 4px}
+@media (max-width:860px){.lado{grid-template-columns:1fr}.menu{position:static;height:auto;display:flex;overflow-x:auto;gap:4px;border-right:0;border-bottom:1px solid var(--linha)}.menu a{white-space:nowrap}.menu .grupo{display:none}}
+:focus-visible{outline:2px solid var(--pri);outline-offset:2px}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+.sugestoes{position:relative}
+.sugestoes ul{position:absolute;left:0;right:0;top:2px;z-index:500;background:var(--card);border:1px solid var(--linha);border-radius:10px;list-style:none;margin:0;padding:4px;max-height:260px;overflow:auto;box-shadow:var(--sombra)}
+.sugestoes li{padding:10px;border-radius:8px;cursor:pointer;font-size:.9rem}
+.sugestoes li:hover,.sugestoes li:focus{background:var(--bg)}
+.status-grande{font-size:1.15rem;font-weight:750}
+</style>
+</head>
+<body>
+<div id="raiz"></div>
+<script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js" integrity="sha384-cxOPjt7s7Iz04uaHJceBmS+qpjv2JkIHNVcuOrM+YHwZOmJGBXI00mdUXEq65HTH" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2/dist/umd/supabase.js" integrity="sha384-Rj26LVGvoeRVR6+mwQmFfcR3QOBEwT+ZmuCWpuiqeTzJpCs0ER4ITAWGb4Hiy3Ok" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js" integrity="sha384-8FWZA6BGMXhsfO+BLtrJK0We6gg5o1JyO8xQm6peWDEUs17ACA5ziE/NIAkl9z2k" crossorigin="anonymous"></script>
+<script>window.MOBI_CONFIG = {};</script>
+<script>
+// ======== CONFIGURAÇÃO (preencha antes de publicar) ========
+const CONFIG = {
+  MARCA: 'Mobi',
+  SUPABASE_URL: '',          // https://xxxx.supabase.co
+  SUPABASE_ANON_KEY: '',     // chave anon (pública)
+  VAPID_PUBLICA: '',         // chave pública do push (opcional)
+  URL_TERMOS: '', URL_PRIVACIDADE: '', VERSAO_TERMOS: 'v1',
+  TELEFONE_SUPORTE: '',
+  MODO_TESTE: false,         // true só em homologação: mostra "simular pagamento"
+  COBRANCA_URL: '',          // https://xxxx.supabase.co/functions/v1/criar-cobranca (gera o PIX/cartão no gateway)
+  MAPA_TILES: '', MAPA_ATRIBUICAO: '', GEOCODER_URL: '',
+};
+</script>
+<script>
+// ===================== NÚCLEO COMUM DOS APPS (gerado a partir de apps/src/core.js) =====================
+// Regras: o app NUNCA grava tabela direto. Tudo passa pelas funções do banco (RPC), que validam
+// permissão, saldo, limites e auditoria. O app só mostra e chama.
+// ordem: CONFIG da página ← configuração gerada no build (window.MOBI_CONFIG) ← tela de configuração (só preenche o que faltar)
+const CFG = (() => {
+  let salvo = {};
+  try { salvo = JSON.parse(localStorage.getItem('mobi_config') || '{}'); } catch (e) {}
+  const base = Object.assign({}, CONFIG, Object.fromEntries(Object.entries(window.MOBI_CONFIG || {}).filter(([, v]) => v !== '' && v !== null)));
+  return Object.assign(base, Object.fromEntries(Object.entries(salvo).filter(([k, v]) => v && !base[k])));
+})();
+const $ = (s, el = document) => el.querySelector(s);
+const $$ = (s, el = document) => [...el.querySelectorAll(s)];
+// escapa TUDO que vem do banco ou do usuário antes de ir para o HTML (contra XSS)
+const esc = (v) => String(v ?? '').replace(/[&<>"'`]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;', '`': '&#96;' }[c]));
+const reais = (v) => v === null || v === undefined || v === '' ? '—' : Number(v).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+const num = (v, c = 0) => v === null || v === undefined ? '—' : Number(v).toLocaleString('pt-BR', { minimumFractionDigits: c, maximumFractionDigits: c });
+const dataHora = (v) => v ? new Date(v).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }) : '—';
+const dataCurta = (v) => v ? new Date(v).toLocaleDateString('pt-BR') : '—';
+const uuid = () => (crypto.randomUUID ? crypto.randomUUID() : 'x' + Date.now() + Math.random().toString(16).slice(2));
+const dorme = (ms) => new Promise((r) => setTimeout(r, ms));
+const hojeISO = () => new Date().toISOString().slice(0, 10);
+
+const ERROS = {
+  CPF_INVALIDO: 'CPF inválido.', DADOS_JA_CADASTRADOS: 'Esses dados já estão em uso em outra conta.', LIMITE_EXCEDIDO: 'Muitas tentativas. Aguarde alguns minutos.',
+  JA_EXISTE_CORRIDA_ATIVA: 'Você já tem uma corrida em andamento.', PAGAMENTO_EM_ABERTO: 'Há um pagamento pendente. Pague antes de pedir outra corrida.',
+  FORA_DA_AREA_DE_ATENDIMENTO: 'Esse endereço está fora da área atendida.', CIDADE_NAO_ATENDIDA: 'Cidade ainda não atendida.',
+  CATEGORIA_INDISPONIVEL: 'Categoria indisponível nesta cidade.', DESTINO_MUITO_PROXIMO: 'Destino muito próximo da origem.',
+  SALDO_INSUFICIENTE: 'Saldo insuficiente.', SEM_PERMISSAO: 'Você não tem permissão para isso.', CONFLITO_DE_INTERESSE: 'Você não pode agir sobre o seu próprio cadastro.',
+  CORRIDA_NAO_ENCONTRADA: 'Corrida não encontrada.', STATUS_INVALIDO: 'Essa ação não vale no estado atual da corrida.',
+  CATEGORIA_SO_DE_OU_PARA_AEROPORTO: 'Essa categoria só vale de ou para o aeroporto.', CATEGORIA_SO_DE_OU_PARA_TERMINAL: 'Essa categoria só vale de ou para o terminal.',
+  CATEGORIA_SO_SAINDO_DE_EVENTO: 'Essa categoria só vale saindo de um evento cadastrado.', DESTINO_DENTRO_DO_MUNICIPIO: 'Para destino na mesma cidade, escolha outra categoria.',
+  ANTECEDENCIA_MINIMA: 'Agende com mais antecedência.', ANTECEDENCIA_MAXIMA: 'Data muito distante.', LIMITE_DE_AGENDAMENTOS: 'Você atingiu o limite de agendamentos ativos.',
+  CUPOM_INVALIDO: 'Cupom inválido.', CUPOM_EXPIRADO: 'Cupom expirado.', CUPOM_ESGOTADO: 'Cupom esgotado.', CUPOM_JA_USADO: 'Você já usou esse cupom.',
+  CUPOM_SO_PRIMEIRA_CORRIDA: 'Cupom válido só na primeira corrida.', CUPOM_NAO_VALE_NESTA_CATEGORIA: 'Cupom não vale para essa categoria.', CUPOM_NAO_VALE_NESTA_CIDADE: 'Cupom não vale nesta cidade.',
+  PENDENCIAS_DE_COMPLIANCE: 'Há pendências no seu cadastro.', OFERTA_EXPIRADA: 'A oferta expirou.', OFERTA_INDISPONIVEL: 'Oferta indisponível.',
+  LONGE_DO_EMBARQUE: 'Você ainda está longe do ponto de embarque.', GPS_DESATUALIZADO: 'Seu GPS está sem atualização. Verifique a localização.',
+  VALOR_ABAIXO_DO_MINIMO: 'Valor abaixo do mínimo para saque.', JA_ASSINANTE: 'Você já é assinante.', CNPJ_INVALIDO: 'CNPJ inválido.',
+  SEM_PERMISSAO_NA_EMPRESA: 'Sem permissão nesta empresa.', CATEGORIA_FORA_DA_POLITICA: 'Categoria fora da política da empresa.',
+  JUSTIFICATIVA_OBRIGATORIA: 'Informe a justificativa.', LIMITE_MENSAL_ATINGIDO: 'Limite mensal atingido.', LIMITE_DE_CREDITO_DA_EMPRESA: 'Limite de crédito da empresa atingido.',
+  EMPRESA_COM_FATURA_VENCIDA: 'A empresa tem fatura vencida.', CONTEXTO_INSUFICIENTE: 'Para bloquear, confirme um sinal ou detalhe a evidência.',
+  ASSUMA_O_INCIDENTE_ANTES: 'Assuma o incidente antes de agir.', NOTIFICACAO_ESSENCIAL: 'Esse aviso é essencial e não pode ser desligado.',
+  CORRIDA_EM_ANDAMENTO: 'Termine a corrida em andamento antes.', SAQUE_SEU_SALDO_ANTES: 'Saque seu saldo antes de excluir a conta.',
+  CADASTRO_INCOMPLETO: 'Complete seu cadastro.', 'JWT expired': 'Sua sessão expirou. Entre de novo.',
+};
+function mensagemErro(e) {
+  const cod = (e && (e.message || e.code)) || String(e);
+  if (ERROS[cod]) return ERROS[cod] + (e.details && !/^[A-Z_]+$/.test(e.details) ? ' (' + e.details + ')' : '');
+  if (/^[A-Z0-9_]+$/.test(cod)) { const t = cod.toLowerCase().replace(/_/g, ' '); return t.charAt(0).toUpperCase() + t.slice(1) + '.'; }
+  if (/Failed to fetch|NetworkError/i.test(cod)) return 'Sem conexão. Verifique a internet.';
+  return cod;
+}
+
+let sb = null;
+function iniciarSupabase() {
+  if (!CFG.SUPABASE_URL || !CFG.SUPABASE_ANON_KEY) return false;
+  sb = window.supabase.createClient(CFG.SUPABASE_URL, CFG.SUPABASE_ANON_KEY, { auth: { persistSession: true, autoRefreshToken: true, storageKey: 'mobi-auth' } });
+  sb.auth.onAuthStateChange((evento) => {
+    if (evento === 'PASSWORD_RECOVERY') telaNovaSenha();          // veio do link "esqueci a senha"
+    if (evento === 'TOKEN_REFRESHED' || evento === 'SIGNED_IN') atualizarTokenSW();
+  });
+  return true;
+}
+// aviso fixo de conexão (some sozinho quando a rede volta)
+function avisoRede(on, texto = 'Sem conexão. Tentando de novo…') {
+  let b = document.getElementById('aviso-rede');
+  if (!on) { if (b) b.remove(); return; }
+  if (!b) { b = document.createElement('div'); b.id = 'aviso-rede'; b.setAttribute('role', 'alert');
+    b.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:200;background:var(--perigo);color:#fff;text-align:center;padding:6px;font-size:.85rem';
+    document.body.appendChild(b); }
+  b.textContent = texto;
+}
+window.addEventListener('online', () => avisoRede(false));
+window.addEventListener('offline', () => avisoRede(true));
+let sessaoExpirada = false;
+async function api(fn, args = {}) {
+  let res;
+  try { res = await sb.rpc(fn, args); }
+  catch (e) { avisoRede(true); throw new Error('Failed to fetch'); }
+  const { data, error, status } = res;
+  if (error) {
+    if (/Failed to fetch|NetworkError|fetch failed/i.test(error.message || '')) avisoRede(true); else avisoRede(false);
+    // sessão vencida/inválida: volta para o login em vez de mostrar telas vazias
+    if ((status === 401 || /JWT expired|invalid JWT|PGRST30/i.test(error.message + ' ' + (error.code || ''))) && !sessaoExpirada) {
+      sessaoExpirada = true; toast('Sua sessão expirou. Entre de novo.', true);
+      setTimeout(async () => { await sb.auth.signOut({ scope: 'local' }).catch(() => {}); location.reload(); }, 1500);
+    }
+    const e = new Error(error.message); e.details = error.details; e.code = error.code; throw e;
+  }
+  avisoRede(false);
+  return data;
+}
+// erros inesperados das telas vão para a equipe (sem dados pessoais: só mensagem e tela)
+let errosEnviados = 0;
+window.addEventListener('error', (ev) => reportarErro(ev.message, { arquivo: ev.filename, linha: ev.lineno }));
+window.addEventListener('unhandledrejection', (ev) => reportarErro(String(ev.reason && ev.reason.message || ev.reason), {}));
+function reportarErro(msg, ctx) {
+  if (!sb || errosEnviados++ > 5 || !msg) return;
+  sb.rpc('registrar_erro_app', { p_app: location.pathname.split('/').pop() || 'index', p_mensagem: String(msg).slice(0, 400), p_contexto: { ...ctx, tela: location.hash } }).then(() => {}, () => {});
+}
+async function tabela(nome, monta) {
+  let qb = sb.from(nome).select(monta.select || '*');
+  if (monta.where) qb = monta.where(qb);
+  const { data, error } = await qb;
+  if (error) throw new Error(error.message);
+  return data;
+}
+
+let toastTimer;
+function toast(msg, erro = false) {
+  let t = $('#toast'); if (!t) { t = document.createElement('div'); t.id = 'toast'; t.setAttribute('role', 'status'); document.body.appendChild(t); }
+  t.textContent = msg; t.className = 'on' + (erro ? ' erro' : '');
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => (t.className = ''), erro ? 5200 : 3000);
+}
+// executa ação de botão com trava (evita clique duplo) e mensagem de erro amigável
+async function acao(botao, fn) {
+  if (botao && botao.disabled) return;
+  const txt = botao ? botao.innerHTML : '';
+  if (botao) { botao.disabled = true; botao.innerHTML = '<span class="carregando"></span>'; }
+  try { return await fn(); }
+  catch (e) { console.error(e); toast(mensagemErro(e), true); }
+  finally { if (botao) { botao.disabled = false; botao.innerHTML = txt; } }
+}
+function modal(html, aoAbrir) {
+  const f = document.createElement('div'); f.className = 'modal-fundo';
+  f.innerHTML = `<div class="modal" role="dialog" aria-modal="true" tabindex="-1">${html}</div>`;
+  f.addEventListener('click', (ev) => { if (ev.target === f) fechar(); });
+  const anterior = document.activeElement;
+  const esc_ = (ev) => { if (ev.key === 'Escape') fechar(); };
+  const fechar = () => { f.remove(); document.removeEventListener('keydown', esc_); if (anterior && anterior.focus) anterior.focus(); };
+  document.addEventListener('keydown', esc_);
+  document.body.appendChild(f);
+  setTimeout(() => { const alvo = f.querySelector('input,select,textarea,button') || f.querySelector('.modal'); alvo && alvo.focus(); }, 0);
+  $$('[data-fechar]', f).forEach((b) => b.addEventListener('click', fechar));
+  if (aoAbrir) aoAbrir(f, fechar);
+  return fechar;
+}
+function confirmar(texto, okTxt = 'Confirmar', perigo = false) {
+  return new Promise((res) => {
+    modal(`<p>${esc(texto)}</p><div class="linha"><button class="sec cresce" data-fechar>Voltar</button><button class="cresce ${perigo ? 'perigo' : ''}" id="ok-conf">${esc(okTxt)}</button></div>`,
+      (f, fechar) => { $('#ok-conf', f).onclick = () => { fechar(); res(true); }; $$('[data-fechar]', f).forEach((b) => b.addEventListener('click', () => res(false))); });
+  });
+}
+function baixar(nome, conteudo, tipo = 'application/json') {
+  const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([conteudo], { type: tipo })); a.download = nome; a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+}
+function posicaoAtual(timeout = 8000) {
+  return new Promise((res) => {
+    if (!navigator.geolocation) return res(null);
+    navigator.geolocation.getCurrentPosition((p) => res({ lat: p.coords.latitude, lng: p.coords.longitude, precisao: p.coords.accuracy }), () => res(null),
+      { enableHighAccuracy: true, timeout, maximumAge: 10000 });
+  });
+}
+// gráfico de barras/linhas em SVG (sem biblioteca)
+function grafico(series, { altura = 160, tipo = 'barra', rotulos = [], formato = (v) => num(v) } = {}) {
+  const vals = series.flatMap((s) => s.valores.map(Number).filter((v) => Number.isFinite(v)));
+  const max = Math.max(1, ...vals), min = Math.min(0, ...vals), L = 600, A = altura, m = 22, n = Math.max(1, series[0]?.valores.length || 1);
+  const y = (v) => A - m - ((v - min) / (max - min || 1)) * (A - 2 * m);
+  const larg = (L - 2 * m) / n;
+  let s = `<svg class="grafico" viewBox="0 0 ${L} ${A}" role="img"><line x1="${m}" x2="${L - m}" y1="${y(0)}" y2="${y(0)}" stroke="currentColor" opacity=".2"/>`;
+  series.forEach((ser, k) => {
+    if (tipo === 'barra') ser.valores.forEach((v, i) => {
+      const bw = larg / series.length * .8, x = m + i * larg + k * bw + larg * .1, yv = y(Math.max(0, v)), h = Math.abs(y(v) - y(0));
+      s += `<rect x="${x}" y="${v >= 0 ? yv : y(0)}" width="${bw}" height="${Math.max(h, .5)}" rx="2" fill="${ser.cor || 'var(--pri)'}"><title>${esc((rotulos[i] || '') + ': ' + formato(v))}</title></rect>`;
+    });
+    else s += `<polyline fill="none" stroke="${ser.cor || 'var(--pri)'}" stroke-width="2.5" points="${ser.valores.map((v, i) => `${m + i * larg + larg / 2},${y(v)}`).join(' ')}"/>`;
+  });
+  const passo = Math.ceil(n / 8);
+  rotulos.forEach((r, i) => { if (i % passo === 0) s += `<text x="${m + i * larg + larg / 2}" y="${A - 6}" text-anchor="middle">${esc(r)}</text>`; });
+  s += `<text x="${m}" y="12">${esc(formato(max))}</text></svg>`;
+  return s;
+}
+// tela de configuração (primeiro uso): URL e chave pública do Supabase
+function telaConfiguracao(alvo) {
+  alvo.innerHTML = `<div class="app"><h1>Configurar o app</h1>
+    <p class="sub">Informe os dados do projeto Supabase (Configurações → API). A chave <b>anon</b> é pública por natureza; a segurança está nas regras do banco.</p>
+    <label>URL do projeto</label><input id="cfg-url" placeholder="https://xxxx.supabase.co">
+    <label>Chave anon (public)</label><input id="cfg-chave" placeholder="eyJ...">
+    <p></p><button class="cheio" id="cfg-ok">Salvar</button>
+    <p class="sub peq">Para publicar, preencha o bloco CONFIG no topo do arquivo HTML em vez de usar esta tela.</p></div>`;
+  $('#cfg-ok').onclick = () => {
+    localStorage.setItem('mobi_config', JSON.stringify({ SUPABASE_URL: $('#cfg-url').value.trim(), SUPABASE_ANON_KEY: $('#cfg-chave').value.trim() }));
+    location.reload();
+  };
+}
+// ---------- login / cadastro (Supabase Auth) ----------
+function telaLogin(alvo, { titulo, aoEntrar, permitirCadastro = true }) {
+  alvo.innerHTML = `<div class="app"><h1>${esc(titulo)}</h1>
+    <div class="card"><label for="lg-email">E-mail</label><input id="lg-email" type="email" autocomplete="email">
+    <label for="lg-senha">Senha</label><input id="lg-senha" type="password" autocomplete="current-password" minlength="8">
+    <p></p><button class="cheio" id="lg-entrar">Entrar</button>
+    ${permitirCadastro ? '<p></p><button class="cheio sec" id="lg-criar">Criar conta</button>' : ''}
+    <p class="cent"><a href="#" id="lg-esqueci">Esqueci a senha</a></p></div></div>`;
+  const email = () => $('#lg-email').value.trim(), senha = () => $('#lg-senha').value;
+  $('#lg-entrar').onclick = (ev) => acao(ev.currentTarget, async () => {
+    const { error } = await sb.auth.signInWithPassword({ email: email(), password: senha() });
+    if (error) throw new Error(/Invalid login/i.test(error.message) ? 'E-mail ou senha incorretos.' : error.message);
+    aoEntrar();
+  });
+  if (permitirCadastro) $('#lg-criar').onclick = (ev) => acao(ev.currentTarget, async () => {
+    if (senha().length < 8) throw new Error('A senha precisa ter pelo menos 8 caracteres.');
+    const { data, error } = await sb.auth.signUp({ email: email(), password: senha() });
+    if (error) throw new Error(error.message);
+    if (!data.session) { toast('Enviamos um link de confirmação para o seu e-mail.'); return; }
+    aoEntrar();
+  });
+  $('#lg-esqueci').onclick = async (ev) => {
+    ev.preventDefault();
+    if (!email()) return toast('Digite seu e-mail primeiro.', true);
+    await sb.auth.resetPasswordForEmail(email(), { redirectTo: location.href.split('#')[0] });
+    toast('Se o e-mail existir, enviamos o link para criar nova senha.');
+  };
+}
+async function sair() {
+  await sb.auth.signOut().catch(() => {}); localStorage.removeItem('mobi-auth');
+  try { if ('caches' in window) await caches.delete('mobi-config'); } catch (e) {}   // o aparelho não guarda mais o acesso
+  location.hash = ''; location.reload();
+}
+// link do e-mail "esqueci a senha": o usuário define a nova senha aqui
+function telaNovaSenha() {
+  modal(`<h2>Criar nova senha</h2><label for="ns-1">Nova senha (mín. 8)</label><input id="ns-1" type="password" autocomplete="new-password" minlength="8">
+    <label for="ns-2">Repita a senha</label><input id="ns-2" type="password" autocomplete="new-password"><p></p><button class="cheio" id="ns-ok">Salvar senha</button>`, (f, fechar) => {
+    $('#ns-ok', f).onclick = (ev) => acao(ev.currentTarget, async () => {
+      const a = $('#ns-1', f).value; if (a.length < 8) throw new Error('A senha precisa ter pelo menos 8 caracteres.'); if (a !== $('#ns-2', f).value) throw new Error('As senhas não conferem.');
+      const { error } = await sb.auth.updateUser({ password: a }); if (error) throw new Error(error.message);
+      fechar(); toast('Senha alterada.'); });
+  });
+}
+async function usuarioAtual() { const { data } = await sb.auth.getSession(); return data.session ? data.session.user : null; }
+
+// formulário de "completar cadastro" (perfil da plataforma)
+async function telaCompletarCadastro(alvo, { motorista = false, aoConcluir }) {
+  const cidades = await tabela('cidades', { select: 'id,nome,uf,centro_lat,centro_lng', where: (q) => q.eq('ativa', true).order('nome') });
+  const codigoUrl = new URLSearchParams(location.search).get('codigo') || localStorage.getItem('mobi_codigo') || '';
+  const u = await usuarioAtual();
+  alvo.innerHTML = `<div class="app"><h1>Complete seu cadastro</h1><div class="card">
+    <label for="cc-nome">Nome completo</label><input id="cc-nome" autocomplete="name">
+    <label for="cc-tel">Celular (com DDD)</label><input id="cc-tel" inputmode="tel" autocomplete="tel" placeholder="21 99999-9999">
+    <label for="cc-cpf">CPF</label><input id="cc-cpf" inputmode="numeric" placeholder="000.000.000-00">
+    <label for="cc-cidade">Cidade</label><select id="cc-cidade">${cidades.map((c) => `<option value="${c.id}">${esc(c.nome)} – ${esc(c.uf)}</option>`).join('')}</select>
+    <label for="cc-cod">Código de indicação (opcional)</label><input id="cc-cod" value="${esc(codigoUrl)}">
+    <label class="chk"><input type="checkbox" id="cc-termos"> Li e aceito os <a href="${esc(CFG.URL_TERMOS || '#')}" target="_blank" rel="noopener">Termos de Uso</a></label>
+    <label class="chk"><input type="checkbox" id="cc-priv"> Li e aceito a <a href="${esc(CFG.URL_PRIVACIDADE || '#')}" target="_blank" rel="noopener">Política de Privacidade</a> (inclui uso da localização durante as corridas)</label>
+    <label class="chk"><input type="checkbox" id="cc-mkt"> Quero receber promoções (opcional, pode desligar quando quiser)</label>
+    <p></p><button class="cheio" id="cc-ok">Continuar</button></div></div>`;
+  $('#cc-ok').onclick = (ev) => acao(ev.currentTarget, async () => {
+    if (!$('#cc-termos').checked || !$('#cc-priv').checked) throw new Error('É preciso aceitar os Termos e a Política de Privacidade.');
+    const r = await api('completar_cadastro', {
+      p_nome: $('#cc-nome').value.trim(), p_telefone: $('#cc-tel').value, p_cpf: $('#cc-cpf').value, p_email: u.email,
+      p_cidade: $('#cc-cidade').value, p_quer_ser_motorista: motorista, p_codigo_indicacao: $('#cc-cod').value.trim() || null,
+      p_dispositivo: dispositivoId(), p_versao_termos: CFG.VERSAO_TERMOS || 'v1',
+    });
+    if (r && r.ok === false) throw new Error(r.erro);
+    await api('registrar_consentimento', { p_tipo: 'TERMOS', p_versao: CFG.VERSAO_TERMOS || 'v1', p_aceito: true });
+    await api('registrar_consentimento', { p_tipo: 'PRIVACIDADE', p_versao: CFG.VERSAO_TERMOS || 'v1', p_aceito: true });
+    await api('registrar_consentimento', { p_tipo: 'MARKETING', p_versao: CFG.VERSAO_TERMOS || 'v1', p_aceito: $('#cc-mkt').checked });
+    if (r && r.aviso_indicacao) toast(r.aviso_indicacao);
+    aoConcluir();
+  });
+}
+function dispositivoId() {
+  let d = localStorage.getItem('mobi_dispositivo');
+  if (!d) { d = uuid(); localStorage.setItem('mobi_dispositivo', d); }
+  return d;
+}
+// notificações push (PWA): o toque chega sem texto, o service worker busca pela API
+async function ativarPush() {
+  if (!('serviceWorker' in navigator) || !('PushManager' in window) || !CFG.VAPID_PUBLICA) throw new Error('Este navegador não suporta notificações ou o push não foi configurado.');
+  const perm = await Notification.requestPermission();
+  if (perm !== 'granted') throw new Error('Permissão de notificação negada.');
+  const reg = await navigator.serviceWorker.register('/sw.js');
+  const chave = Uint8Array.from(atob(CFG.VAPID_PUBLICA.replace(/-/g, '+').replace(/_/g, '/') + '==='.slice((CFG.VAPID_PUBLICA.length + 3) % 4)), (c) => c.charCodeAt(0));
+  const sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: chave });
+  const j = sub.toJSON();
+  await api('registrar_push', { p_endpoint: j.endpoint, p_p256dh: j.keys.p256dh, p_auth: j.keys.auth, p_navegador: navigator.userAgent.slice(0, 80) });
+  await atualizarTokenSW();
+  toast('Notificações ativadas.');
+}
+// o service worker busca o texto das notificações com o login do usuário (guardado só neste aparelho)
+async function atualizarTokenSW() {
+  try {
+    if (!('caches' in window)) return;
+    const s = (await sb.auth.getSession()).data.session;
+    const c = await caches.open('mobi-config');
+    await c.put('/__mobi_config', new Response(JSON.stringify({ url: CFG.SUPABASE_URL, anon: CFG.SUPABASE_ANON_KEY, token: s ? s.access_token : null, app: location.pathname })));
+  } catch (e) {}
+}
+async function registrarAcesso() { try { await api('registrar_acesso', { p_dispositivo: dispositivoId(), p_plataforma: 'WEB' }); } catch (e) {} }
+// mapa (Leaflet + OpenStreetMap). Em produção, troque o provedor de mapa em CONFIG.MAPA_TILES.
+function criarMapa(el, centro, zoom = 14) {
+  const m = L.map(el, { zoomControl: true, attributionControl: true }).setView([centro.lat, centro.lng], zoom);
+  L.tileLayer(CFG.MAPA_TILES || 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: CFG.MAPA_ATRIBUICAO || '&copy; OpenStreetMap' }).addTo(m);
+  return m;
+}
+const corNivel = { ALTA: '#c62828', MODERADA: '#e07b00', NORMAL: '#1f7a3a', BAIXA: '#7a8594' };
+// busca de endereço (geocodificação). Padrão: Nominatim (OSM) com limite de 1 req/s — em produção use um provedor contratado.
+let geoTimer;
+function buscarEndereco(texto, perto) {
+  return new Promise((res) => {
+    clearTimeout(geoTimer);
+    geoTimer = setTimeout(async () => {
+      if (!texto || texto.length < 4) return res([]);
+      try {
+        const url = (CFG.GEOCODER_URL || 'https://nominatim.openstreetmap.org/search') + '?format=json&addressdetails=0&limit=6&countrycodes=br&q=' + encodeURIComponent(texto)
+          + (perto ? `&viewbox=${perto.lng - .3},${perto.lat + .3},${perto.lng + .3},${perto.lat - .3}` : '');
+        const r = await fetch(url, { headers: { 'Accept-Language': 'pt-BR' } });
+        res((await r.json()).map((x) => ({ nome: x.display_name, lat: +x.lat, lng: +x.lon })));
+      } catch (e) { res([]); }
+    }, 700);
+  });
+}
+// ---------- cobrança online (PIX copia-e-cola / link de cartão) ----------
+async function obterCobranca(pagamentoId) {
+  let c = await api('minha_cobranca', { p_pagamento: pagamentoId });
+  if (c.status === 'PENDENTE' && !c.cobranca && CFG.COBRANCA_URL) {
+    const s = (await sb.auth.getSession()).data.session;
+    const r = await fetch(CFG.COBRANCA_URL, { method: 'POST', headers: { Authorization: 'Bearer ' + s.access_token, apikey: CFG.SUPABASE_ANON_KEY, 'Content-Type': 'application/json' }, body: JSON.stringify({ pagamento_id: pagamentoId }) });
+    if (!r.ok) { const j = await r.json().catch(() => ({})); throw new Error(j.erro || 'Não foi possível gerar a cobrança agora.'); }
+    c = await api('minha_cobranca', { p_pagamento: pagamentoId });
+  }
+  return c;
+}
+function htmlCobranca(c) {
+  if (!c || c.status !== 'PENDENTE') return '';
+  const cb = c.cobranca || {};
+  if (cb.pix_copia_cola) return `<div class="cent"><div id="qr-pix" style="display:inline-block;background:#fff;padding:8px;border-radius:10px"></div></div>
+      <label for="pix-cc">PIX copia e cola</label><div class="linha"><input id="pix-cc" class="cresce" readonly value="${esc(cb.pix_copia_cola)}"><button class="mini" id="pix-copiar">Copiar</button></div>
+      ${cb.expira_em ? `<div class="sub peq">Válido até ${dataHora(cb.expira_em)}</div>` : ''}`;
+  if (cb.link) return `<a class="btn cheio" href="${esc(cb.link)}" target="_blank" rel="noopener">Pagar com cartão</a>`;
+  return CFG.COBRANCA_URL ? '<div class="sub">Gerando cobrança…</div>' : '<div class="sub">Pagamento online ainda não configurado nesta instalação.</div>';
+}
+function ligarCobranca(el) {
+  const inp = $('#pix-cc', el); if (!inp) return;
+  try { if (window.qrcode) { const q = qrcode(0, 'M'); q.addData(inp.value); q.make(); $('#qr-pix', el).innerHTML = q.createSvgTag({ cellSize: 4, margin: 2 }); } } catch (e) {}
+  $('#pix-copiar', el).onclick = async () => { await navigator.clipboard.writeText(inp.value).catch(() => { inp.select(); document.execCommand('copy'); }); toast('Código PIX copiado.'); };
+}
+// ===================== fim do núcleo =====================
+
+</script>
+<script>
+// =================== APP DO PASSAGEIRO ===================
+const raiz = $('#raiz');
+const E = { perfil: null, cidade: null, origem: null, destino: null, estimativa: null, escolha: null, metodo: 'PIX', cupom: null,
+            empresas: [], corporativa: false, corridaId: null, poll: null, mapa: null, camadas: null };
+const ATIVOS = ['SOLICITADA', 'BUSCANDO', 'A_CAMINHO', 'CHEGOU', 'EM_CURSO'];
+
+function casca(titulo, conteudo, aba) {
+  raiz.innerHTML = `<div class="topo"><span class="marca">${esc(CFG.MARCA)}</span><span class="sub">${esc(titulo)}</span><span class="esp"></span>
+      <button class="mini sec" onclick="location.hash='#notificacoes'" aria-label="Notificações">🔔</button></div>
+    <div class="app" id="conteudo">${conteudo}</div>
+    <nav class="abas">
+      <a href="#inicio" class="${aba === 'inicio' ? 'ativa' : ''}"><span class="ic">🏠</span>Início</a>
+      <a href="#historico" class="${aba === 'historico' ? 'ativa' : ''}"><span class="ic">🧾</span>Viagens</a>
+      <a href="#carteira" class="${aba === 'carteira' ? 'ativa' : ''}"><span class="ic">💳</span>Carteira</a>
+      <a href="#conta" class="${aba === 'conta' ? 'ativa' : ''}"><span class="ic">👤</span>Conta</a>
+    </nav>`;
+}
+
+async function iniciar() {
+  if (!iniciarSupabase()) return telaConfiguracao(raiz);
+  const u = await usuarioAtual();
+  if (!u) return telaLogin(raiz, { titulo: 'Entrar como passageiro', aoEntrar: iniciar });
+  const p = await api('meu_perfil').catch(() => null);
+  if (!p || !p.perfil) return telaCompletarCadastro(raiz, { aoConcluir: iniciar });
+  E.perfil = p;
+  const cs = await tabela('cidades', { select: 'id,nome,uf,centro_lat,centro_lng,raio_atendimento_km', where: (q) => q.eq('id', p.perfil.cidade_id) });
+  E.cidade = cs[0];
+  E.empresas = await api('minhas_empresas').catch(() => []);
+  // convites de empresa: a pessoa decide (nada de entrar numa empresa sem querer)
+  api('meus_convites_empresa').then((cv) => cv.forEach((c) => modal(`<h2>Convite de empresa</h2><p><b>${esc(c.empresa)}</b> convidou você para usar corridas corporativas (${esc(c.papel.toLowerCase())}).</p>
+      <p class="sub peq">A empresa passa a ver as corridas que você fizer como corporativas (não as pessoais).</p>
+      <div class="linha"><button class="sec cresce" data-r="0">Recusar</button><button class="cresce" data-r="1">Aceitar</button></div>`, (f, fechar) => $$('[data-r]', f).forEach((b) => (b.onclick = (ev) => acao(ev.currentTarget, async () => {
+      await api('responder_convite_empresa', { p_convite: c.id, p_aceitar: b.dataset.r === '1' }); fechar(); E.empresas = await api('minhas_empresas'); })))))).catch(() => {});
+  registrarAcesso(); atualizarTokenSW();
+  // corrida em andamento? volta direto para ela
+  // corrida em andamento ou finalizada ainda sem pagamento/avaliação (ex.: app fechado no fim da viagem)
+  const ativa = await tabela('corridas', { select: 'id,status,finalizada_em', where: (q) => q.eq('passageiro_id', u.id).in('status', [...ATIVOS, 'FINALIZADA']).order('solicitada_em', { ascending: false }).limit(1) });
+  if (ativa.length) { E.corridaId = ativa[0].id; location.hash = '#corrida'; }
+  window.onhashchange = rotear; rotear();
+}
+function rotear() {
+  clearInterval(E.poll);
+  const r = (location.hash || '#inicio').slice(1);
+  ({ inicio: telaInicio, corrida: telaCorrida, historico: telaHistorico, carteira: telaCarteira, conta: telaConta, notificacoes: telaNotificacoes, agendadas: telaAgendadas }[r] || telaInicio)();
+}
+
+// ------------------------- INÍCIO: escolher destino e categoria -------------------------
+async function telaInicio() {
+  casca('Para onde vamos?', `
+    <div class="mapa" id="mapa"></div>
+    <div class="card">
+      <label for="origem">Saindo de</label>
+      <input id="origem" placeholder="Minha localização" autocomplete="off"><div class="sugestoes"><ul id="sug-origem" class="oculto"></ul></div>
+      <label for="destino">Para onde?</label>
+      <input id="destino" placeholder="Digite o destino" autocomplete="off"><div class="sugestoes"><ul id="sug-destino" class="oculto"></ul></div>
+      <div class="chips" id="favoritos"></div>
+      <div class="linha"><a href="#agendadas" class="sub">📅 Minhas viagens agendadas</a></div>
+    </div>
+    <div id="opcoes"></div>`, 'inicio');
+  const centro = E.origem || { lat: E.cidade.centro_lat, lng: E.cidade.centro_lng };
+  E.mapa = criarMapa($('#mapa'), centro, 14); E.camadas = L.layerGroup().addTo(E.mapa);
+  if (!E.origem) {
+    const pos = await posicaoAtual();
+    if (pos) { E.origem = { lat: pos.lat, lng: pos.lng, endereco: 'Minha localização' }; E.mapa.setView([pos.lat, pos.lng], 15); }
+  }
+  if (E.origem) $('#origem').value = E.origem.endereco;
+  if (E.destino) $('#destino').value = E.destino.endereco;
+  desenharPontos();
+  const favs = await tabela('locais_favoritos', { select: 'id,nome,endereco,lat,lng', where: (q) => q.order('nome') }).catch(() => []);
+  $('#favoritos').innerHTML = favs.map((f, i) => `<button data-fav="${i}">⭐ ${esc(f.nome)}</button>`).join('');
+  $$('[data-fav]').forEach((b) => (b.onclick = () => { const f = favs[+b.dataset.fav]; escolherPonto('destino', { lat: f.lat, lng: f.lng, endereco: f.endereco }); }));
+  ligarBusca('origem'); ligarBusca('destino');
+  if (E.origem && E.destino) estimar();
+}
+function ligarBusca(campo) {
+  const inp = $('#' + campo), ul = $('#sug-' + campo);
+  inp.oninput = async () => {
+    const r = await buscarEndereco(inp.value, E.origem || { lat: E.cidade.centro_lat, lng: E.cidade.centro_lng });
+    ul.innerHTML = r.map((x, i) => `<li tabindex="0" data-i="${i}">${esc(x.nome)}</li>`).join('');
+    ul.classList.toggle('oculto', !r.length);
+    $$('li', ul).forEach((li) => (li.onclick = li.onkeydown = (ev) => { if (ev.type === 'keydown' && ev.key !== 'Enter') return; const x = r[+li.dataset.i]; ul.classList.add('oculto'); escolherPonto(campo, { lat: x.lat, lng: x.lng, endereco: x.nome.split(',').slice(0, 3).join(',') }); }));
+  };
+}
+function escolherPonto(campo, ponto) {
+  E[campo] = ponto; $('#' + campo).value = ponto.endereco; desenharPontos();
+  if (E.origem && E.destino) estimar();
+}
+function desenharPontos() {
+  if (!E.camadas) return;
+  E.camadas.clearLayers();
+  const pts = [];
+  if (E.origem) { L.circleMarker([E.origem.lat, E.origem.lng], { radius: 9, color: '#0b6bcb', fillOpacity: .9 }).addTo(E.camadas).bindTooltip('Embarque'); pts.push([E.origem.lat, E.origem.lng]); }
+  if (E.destino) { L.circleMarker([E.destino.lat, E.destino.lng], { radius: 9, color: '#c62828', fillOpacity: .9 }).addTo(E.camadas).bindTooltip('Destino'); pts.push([E.destino.lat, E.destino.lng]); }
+  if (pts.length === 2) { L.polyline(pts, { dashArray: '6 6', color: '#0b6bcb' }).addTo(E.camadas); E.mapa.fitBounds(pts, { padding: [40, 40] }); }
+}
+async function estimar() {
+  const box = $('#opcoes'); box.innerHTML = '<div class="card cent"><span class="carregando"></span> Calculando opções…</div>';
+  try {
+    E.estimativa = await api('estimar_corrida_detalhada', { p_cidade: E.cidade.id, p_o_lat: E.origem.lat, p_o_lng: E.origem.lng, p_d_lat: E.destino.lat, p_d_lng: E.destino.lng });
+  } catch (e) { box.innerHTML = `<div class="erro">${esc(mensagemErro(e))}</div>`; return; }
+  const ops = E.estimativa.opcoes;
+  if (!ops.length) { box.innerHTML = '<div class="aviso">Nenhuma categoria disponível para este trajeto.</div>'; return; }
+  E.escolha = E.escolha && ops.find((o) => o.categoria === E.escolha.categoria) || ops[0];
+  const emp = E.empresas.filter((x) => x.status === 'ATIVA');
+  box.innerHTML = `<div class="card"><h2>Escolha como ir</h2>
+    ${ops.map((o, i) => `<div class="opcao ${o.categoria === E.escolha.categoria ? 'sel' : ''}" data-op="${i}" tabindex="0" role="button">
+      <div class="cresce"><b>${esc(o.nome)}</b> <span class="sub peq">até ${esc(o.capacidade)} pessoas</span>
+        <div class="sub peq">🚗 ${esc(o.chegada_faixa)}${o.inclui.length ? ' · ' + o.inclui.map(esc).join(', ') : ''}</div></div>
+      <div style="text-align:right"><div class="preco">${reais(o.preco_estimado)}</div>
+        ${o.desconto_mobi_mais_estimado > 0 ? `<div class="sub peq">Mobi+ −${reais(o.desconto_mobi_mais_estimado)}</div>` : ''}<div class="sub peq">estimado</div></div></div>`).join('')}
+    <p class="sub peq">${esc(E.estimativa.aviso)}</p>
+    ${emp.length ? `<label class="chk"><input type="checkbox" id="corp" ${E.corporativa ? 'checked' : ''}> Corrida corporativa (empresa paga)</label>
+      <div id="corp-box" class="${E.corporativa ? '' : 'oculto'}"><label>Empresa</label><select id="corp-emp">${emp.map((x) => `<option value="${x.empresa}">${esc(x.nome)}</option>`).join('')}</select>
+      <label>Centro de custo</label><select id="corp-cc"></select><label>Justificativa</label><input id="corp-just" maxlength="300" placeholder="Ex.: visita a cliente"></div>` : ''}
+    <div id="pag-box" class="${E.corporativa ? 'oculto' : ''}">
+      <label>Pagamento</label><select id="metodo"><option value="PIX">PIX</option><option value="CARTAO">Cartão</option><option value="CARTEIRA">Créditos da carteira</option><option value="DINHEIRO">Dinheiro</option></select>
+      <label>Cupom</label><div class="linha"><input id="cupom" class="cresce" style="text-transform:uppercase" value="${esc(E.cupom || '')}"><button class="mini sec" id="val-cupom">Aplicar</button></div><div id="cupom-res" class="sub peq"></div>
+    </div>
+    <label>Recado para o motorista (opcional)</label><input id="obs" maxlength="200" placeholder="Ex.: portão azul">
+    <label class="chk"><input type="checkbox" id="agendar"> Agendar para depois</label>
+    <div id="agendar-box" class="oculto"><input type="datetime-local" id="quando"></div>
+    <p></p><button class="cheio" id="pedir">Pedir ${esc(E.escolha.nome)}</button></div>`;
+  $('#metodo').value = E.metodo;
+  $$('[data-op]').forEach((d) => (d.onclick = d.onkeydown = (ev) => { if (ev.type === 'keydown' && ev.key !== 'Enter') return; E.escolha = ops[+d.dataset.op]; estimar(); }));
+  $('#metodo').onchange = () => (E.metodo = $('#metodo').value);
+  $('#agendar').onchange = () => { $('#agendar-box').classList.toggle('oculto', !$('#agendar').checked); $('#pedir').textContent = $('#agendar').checked ? 'Agendar viagem' : 'Pedir ' + E.escolha.nome; };
+  const corp = $('#corp');
+  const carregarCentros = () => { const x = E.empresas.find((e) => e.empresa === $('#corp-emp').value); $('#corp-cc').innerHTML = '<option value="">—</option>' + (x.centros_custo || []).map((c) => `<option value="${c.id}" ${c.id === x.centro_custo_padrao ? 'selected' : ''}>${esc(c.codigo + ' ' + c.nome)}</option>`).join(''); };
+  if (corp) { carregarCentros(); $('#corp-emp').onchange = carregarCentros; corp.onchange = () => { E.corporativa = corp.checked; $('#corp-box').classList.toggle('oculto', !corp.checked); $('#pag-box').classList.toggle('oculto', corp.checked); }; }
+  $('#val-cupom').onclick = (ev) => acao(ev.currentTarget, async () => {
+    const cod = $('#cupom').value.trim(); if (!cod) { E.cupom = null; $('#cupom-res').textContent = ''; return; }
+    const v = await api('validar_cupom', { p_codigo: cod, p_cidade: E.cidade.id, p_categoria: E.escolha.categoria, p_valor_estimado: E.escolha.preco_estimado });
+    if (!v.valido) { E.cupom = null; $('#cupom-res').innerHTML = `<span style="color:var(--perigo)">${esc(mensagemErro({ message: v.erro }))}</span>`; return; }
+    E.cupom = v.codigo; $('#cupom-res').innerHTML = `<span style="color:var(--ok)">Cupom válido: cerca de ${reais(v.desconto_estimado)} de desconto (aplicado no pagamento).</span>`;
+  });
+  $('#pedir').onclick = (ev) => acao(ev.currentTarget, pedir);
+}
+async function pedir() {
+  const base = { p_cidade: E.cidade.id, p_categoria: E.escolha.categoria, p_o_lat: E.origem.lat, p_o_lng: E.origem.lng, p_o_endereco: E.origem.endereco,
+                 p_d_lat: E.destino.lat, p_d_lng: E.destino.lng, p_d_endereco: E.destino.endereco };
+  const obs = $('#obs').value.trim();
+  if ($('#agendar').checked) {
+    const q = $('#quando').value; if (!q) throw new Error('Escolha data e hora.');
+    if (E.corporativa) throw new Error('Agendamento corporativo ainda não está disponível.');
+    const r = await api('agendar_corrida', { p_chave_idempotencia: uuid(), ...base, p_metodo: E.metodo, p_agendada_para: new Date(q).toISOString(), p_opcoes: obs ? { observacao: obs } : {} });
+    toast('Viagem agendada. ' + r.aviso); location.hash = '#agendadas'; return;
+  }
+  let r;
+  if (E.corporativa) {
+    r = await api('solicitar_corrida_empresa', { p_empresa: $('#corp-emp').value, p_chave_idempotencia: uuid(), ...base,
+      p_centro_custo: $('#corp-cc').value || null, p_justificativa: $('#corp-just').value.trim() || null });
+  } else {
+    r = await api('solicitar_corrida', { p_chave_idempotencia: uuid(), ...base, p_metodo: E.metodo });
+  }
+  E.corridaId = r.corrida;
+  if (E.cupom && !E.corporativa) { const c = await api('aplicar_cupom', { p_corrida: r.corrida, p_codigo: E.cupom }).catch(() => null); if (c && !c.ok) toast(mensagemErro({ message: c.erro }), true); }
+  if (obs) await api('definir_opcoes_corrida', { p_corrida: r.corrida, p_opcoes: { observacao: obs } }).catch(() => {});
+  location.hash = '#corrida';
+}
+
+// ------------------------- CORRIDA EM ANDAMENTO -------------------------
+const TXT_STATUS = { SOLICITADA: 'Procurando motorista…', BUSCANDO: 'Procurando motorista…', A_CAMINHO: 'Motorista a caminho', CHEGOU: 'Seu motorista chegou',
+  EM_CURSO: 'Em viagem', FINALIZADA: 'Viagem finalizada', PAGA: 'Viagem paga', CANCELADA: 'Corrida cancelada', SEM_MOTORISTA: 'Nenhum motorista disponível agora' };
+async function telaCorrida() {
+  if (!E.corridaId) { location.hash = '#inicio'; return; }
+  casca('Sua viagem', `<div class="mapa baixo" id="mapa"></div><div id="painel"></div>`, 'inicio');
+  E.mapa = criarMapa($('#mapa'), { lat: E.cidade.centro_lat, lng: E.cidade.centro_lng }, 14); E.camadas = L.layerGroup().addTo(E.mapa);
+  let primeira = true, verificacaoAberta = null; E.ultimoEstado = null;
+  const atualizar = async () => {
+    let c;
+    try { c = await api('acompanhar_corrida', { p_corrida: E.corridaId }); } catch (e) { return; }
+    E.camadas.clearLayers();
+    const pts = [[c.origem.lat, c.origem.lng], [c.destino.lat, c.destino.lng]];
+    L.circleMarker(pts[0], { radius: 8, color: '#0b6bcb', fillOpacity: .9 }).addTo(E.camadas);
+    L.circleMarker(pts[1], { radius: 8, color: '#c62828', fillOpacity: .9 }).addTo(E.camadas);
+    if (c.motorista && c.motorista.lat) { L.marker([c.motorista.lat, c.motorista.lng], { title: 'Motorista' }).addTo(E.camadas); pts.push([c.motorista.lat, c.motorista.lng]); }
+    if (primeira) { E.mapa.fitBounds(pts, { padding: [30, 30] }); primeira = false; }
+    // só redesenha o painel quando algo mudou (não apaga o que a pessoa está digitando)
+    const assinatura = [c.status, c.pagamento && c.pagamento.status, c.avaliou, c.motorista && c.motorista.nome, c.preco_final].join('|');
+    if (assinatura !== E.ultimoEstado) { E.ultimoEstado = assinatura; renderCorrida(c); }
+    else { const eta = $('#eta'); if (eta && c.motorista && c.motorista.eta_min != null) eta.textContent = ` · chega em ~${c.motorista.eta_min} min`; }
+    if (c.verificacao && verificacaoAberta !== c.verificacao.id) {
+      verificacaoAberta = c.verificacao.id;
+      modal(`<h2>Está tudo bem?</h2><p>${esc(c.verificacao.mensagem)}</p><div class="linha"><button class="perigo cresce" id="vf-nao">Preciso de ajuda</button><button class="ok cresce" id="vf-sim">Está tudo bem</button></div>`,
+        (f, fechar) => {
+          $('#vf-sim', f).onclick = (ev) => acao(ev.currentTarget, async () => { await api('responder_verificacao', { p_verificacao: c.verificacao.id, p_tudo_bem: true }); fechar(); });
+          $('#vf-nao', f).onclick = (ev) => acao(ev.currentTarget, async () => { await api('responder_verificacao', { p_verificacao: c.verificacao.id, p_tudo_bem: false }); fechar(); emergencia(); });
+        });
+    }
+    if (['CANCELADA', 'SEM_MOTORISTA'].includes(c.status) || (c.status === 'PAGA' && c.avaliou)) clearInterval(E.poll);
+  };
+  await atualizar();
+  E.poll = setInterval(atualizar, 3000);
+}
+function renderCorrida(c) {
+  const m = c.motorista;
+  const eta = c.status === 'A_CAMINHO' && m && m.eta_min != null ? ` · chega em ~${m.eta_min} min` : '';
+  let html = `<div class="card"><div class="status-grande">${esc(TXT_STATUS[c.status] || c.status)}<span id="eta">${esc(eta)}</span></div>
+    <div class="sub">${esc(c.origem.endereco)} → ${esc(c.destino.endereco)}</div>
+    <div class="linha" style="margin-top:6px"><span class="pilula">${esc(c.categoria)}</span><span class="sub">${reais(c.preco_final ?? c.preco_estimado)} ${c.preco_final ? '' : '(estimado)'}</span>${c.empresa ? '<span class="pilula">corporativa</span>' : ''}</div></div>`;
+  if (m) html += `<div class="card"><div class="linha"><div class="cresce"><b>${esc(m.nome)}</b> ⭐ ${num(m.nota, 2)}<div class="sub">${esc(m.veiculo.modelo)} · ${esc(m.veiculo.cor)}</div></div>
+    <div style="text-align:right"><div class="sub peq">Placa</div><b style="font-size:1.2rem">${esc(m.veiculo.placa)}</b></div></div>
+    ${['A_CAMINHO', 'CHEGOU'].includes(c.status) ? `<p class="sub">Confira a placa antes de entrar. Informe o PIN ao motorista:</p><div class="pin">${esc(c.pin || '')}</div>` : ''}</div>`;
+  if (ATIVOS.includes(c.status)) html += `<div class="linha">
+      <button class="sec cresce" id="b-compart">📍 Compartilhar</button>
+      <button class="perigo cresce" id="b-emerg">🚨 Emergência</button></div>
+    ${c.status !== 'EM_CURSO' ? '<p></p><button class="sec cheio" id="b-cancelar">Cancelar corrida</button>' : ''}`;
+  if (c.status === 'SEM_MOTORISTA') html += `<button class="cheio" id="b-denovo">Tentar de novo</button>`;
+  if (['FINALIZADA', 'PAGA'].includes(c.status)) html += blocoPagamento(c);
+  if (c.status === 'CANCELADA') html += `<div class="card">${c.taxa_cancelamento > 0 ? `Taxa de cancelamento: <b>${reais(c.taxa_cancelamento)}</b>` : 'Sem custo.'}</div><button class="cheio" onclick="E.corridaId=null;location.hash='#inicio'">Nova corrida</button>`;
+  $('#painel').innerHTML = html;
+  const b = (id, fn) => { const el = $('#' + id); if (el) el.onclick = (ev) => acao(ev.currentTarget, fn); };
+  b('b-compart', async () => {
+    const t = await api('compartilhar_corrida', { p_corrida: c.id });
+    const link = location.origin + '/v/' + t;
+    if (navigator.share) await navigator.share({ title: 'Acompanhe minha viagem', url: link }).catch(() => {});
+    else { await navigator.clipboard.writeText(link).catch(() => {}); toast('Link copiado. Vale por 6 horas.'); }
+  });
+  b('b-emerg', emergencia);
+  b('b-cancelar', async () => {
+    const ok = await confirmar(c.motorista ? 'Cancelar agora pode gerar taxa se o motorista já estiver a caminho há algum tempo. Cancelar?' : 'Cancelar a busca?', 'Cancelar corrida', true);
+    if (!ok) return;
+    const r = await api('cancelar_corrida', { p_corrida: c.id, p_motivo: 'Cancelado pelo passageiro' });
+    toast(r && r.taxa > 0 ? 'Cancelada. Taxa: ' + reais(r.taxa) : 'Corrida cancelada.');
+  });
+  b('b-denovo', async () => { E.corridaId = null; location.hash = '#inicio'; });
+  ligarPagamento(c);
+}
+async function emergencia() {
+  const pos = await posicaoAtual(4000);
+  await api('acionar_emergencia', { p_corrida: E.corridaId, p_lat: pos && pos.lat, p_lng: pos && pos.lng, p_descricao: 'Botão de emergência (passageiro)' });
+  modal(`<h2>Pedido de ajuda enviado</h2><p>Nossa central de segurança foi avisada e seus contatos de confiança receberam o link da viagem.</p>
+    <p><b>Em perigo imediato, ligue para a polícia.</b></p><a class="btn perigo cheio" href="tel:190">Ligar 190</a><p></p><button class="sec cheio" data-fechar>Fechar</button>`);
+}
+function blocoPagamento(c) {
+  const p = c.pagamento;
+  let h = '<div class="card"><h2>Pagamento</h2>';
+  if (c.desconto > 0) h += `<div class="sub">Desconto aplicado: ${reais(c.desconto)}</div>`;
+  if (!p) h += '<div class="sub">Processando…</div>';
+  else if (p.status === 'CONFIRMADO') h += `<div class="info">Pago: ${reais(p.valor)} ✔</div>`;
+  else if (p.status === 'FALHOU') h += `<div class="erro">O pagamento de ${reais(p.valor)} não foi aprovado.</div>
+      <label>Tentar com</label><select id="pg-metodo"><option value="PIX">PIX</option><option value="CARTAO">Cartão</option><option value="CARTEIRA">Créditos</option></select><p></p><button class="cheio" id="pg-denovo">Pagar novamente</button>`;
+  else h += `<div class="aviso">Aguardando confirmação do pagamento de <b>${reais(p.valor)}</b> (${esc(c.metodo)}).</div>
+      <div id="cobranca"></div>
+      ${CFG.MODO_TESTE ? '<button class="sec cheio" id="pg-simular">Simular pagamento (homologação)</button>' : ''}`;
+  h += '</div>';
+  if (!c.avaliou) h += `<div class="card"><h2>Como foi a viagem?</h2><div class="estrelas cent" id="estrelas">${[1, 2, 3, 4, 5].map((n) => `<button data-n="${n}" aria-label="${n} estrelas">★</button>`).join('')}</div>
+      <div class="chips" id="tags">${['Direção segura', 'Educação', 'Carro limpo', 'Pontualidade', 'Rota ruim', 'Direção perigosa'].map((t) => `<button data-t="${esc(t)}">${esc(t)}</button>`).join('')}</div>
+      <textarea id="coment" rows="2" maxlength="500" placeholder="Comentário (opcional)"></textarea>
+      <label>Gorjeta (100% para o motorista)</label><select id="gorjeta"><option value="0">Sem gorjeta</option><option value="2">R$ 2</option><option value="5">R$ 5</option><option value="10">R$ 10</option></select>
+      <p></p><button class="cheio" id="avaliar">Enviar avaliação</button></div>`;
+  else h += `<button class="cheio" onclick="E.corridaId=null;location.hash='#inicio'">Nova corrida</button>`;
+  return h;
+}
+function ligarPagamento(c) {
+  const cbx = $('#cobranca');
+  if (cbx && c.pagamento && ['PIX', 'CARTAO'].includes(c.metodo)) obterCobranca(c.pagamento.id).then((cb) => { cbx.innerHTML = htmlCobranca(cb); ligarCobranca(cbx); }).catch((e) => (cbx.innerHTML = `<div class="erro">${esc(mensagemErro(e))}</div>`));
+  const den = $('#pg-denovo'); if (den) den.onclick = (ev) => acao(ev.currentTarget, async () => { await api('pagar_novamente', { p_pagamento: c.pagamento.id, p_metodo: $('#pg-metodo').value }); toast('Nova cobrança gerada.'); });
+  const sim = $('#pg-simular'); if (sim) sim.onclick = (ev) => acao(ev.currentTarget, async () => { await api('dev_simular_pagamento', { p_pagamento: c.pagamento.id }); toast('Pagamento simulado.'); });
+  const est = $('#estrelas'); if (!est) return;
+  let nota = 0; const tags = new Set();
+  $$('button', est).forEach((b) => (b.onclick = () => { nota = +b.dataset.n; $$('button', est).forEach((x) => x.classList.toggle('on', +x.dataset.n <= nota)); }));
+  $$('#tags button').forEach((b) => (b.onclick = () => { tags.has(b.dataset.t) ? tags.delete(b.dataset.t) : tags.add(b.dataset.t); b.classList.toggle('sel'); b.style.borderColor = tags.has(b.dataset.t) ? 'var(--pri)' : ''; }));
+  $('#avaliar').onclick = (ev) => acao(ev.currentTarget, async () => {
+    if (!nota) throw new Error('Escolha de 1 a 5 estrelas.');
+    await api('avaliar_corrida', { p_corrida: c.id, p_nota: nota, p_comentario: $('#coment').value.trim() || null, p_tags: [...tags] });
+    const g = +$('#gorjeta').value; if (g > 0) await api('dar_gorjeta', { p_corrida: c.id, p_valor: g });
+    toast('Obrigado pela avaliação!'); E.corridaId = null; location.hash = '#inicio';
+  });
+}
+
+// ------------------------- AGENDADAS / HISTÓRICO -------------------------
+async function telaAgendadas() {
+  casca('Agendadas', '<h1>Viagens agendadas</h1><div id="lista"><span class="carregando"></span></div>', 'inicio');
+  const l = await api('minhas_agendadas');
+  $('#lista').innerHTML = l.length ? `<ul class="lista">${l.map((a) => `<li><div class="linha"><div class="cresce"><b>${dataHora(a.agendada_para)}</b> <span class="pilula ${esc(a.status)}">${esc(a.status)}</span>
+      <div class="sub">${esc(a.origem)} → ${esc(a.destino)}</div><div class="sub peq">${esc(a.categoria)} · ${reais(a.preco_estimado)} estimado${a.falha ? ' · ' + esc(mensagemErro({ message: a.falha })) : ''}</div></div>
+      ${a.status === 'AGENDADA' ? `<button class="mini sec" data-c="${a.id}">Cancelar</button>` : ''}${a.status === 'DISPARADA' && a.corrida ? `<button class="mini" data-v="${a.corrida}">Ver</button>` : ''}</div></li>`).join('')}</ul>`
+    : '<p class="sub">Nenhuma viagem agendada.</p>';
+  $$('[data-c]').forEach((b) => (b.onclick = (ev) => acao(ev.currentTarget, async () => { await api('cancelar_agendamento', { p_agendamento: b.dataset.c }); telaAgendadas(); })));
+  $$('[data-v]').forEach((b) => (b.onclick = () => { E.corridaId = b.dataset.v; location.hash = '#corrida'; }));
+}
+async function telaHistorico() {
+  casca('Viagens', '<h1>Suas viagens</h1><div id="lista"><span class="carregando"></span></div>', 'historico');
+  const h = await api('historico_passageiro', { p_limite: 50 });
+  $('#lista').innerHTML = h.length ? `<ul class="lista">${h.map((x) => `<li><div class="linha"><div class="cresce"><b>${dataHora(x.data)}</b> <span class="pilula ${esc(x.status)}">${esc(x.status)}</span>
+      <div class="sub">${esc(x.origem)} → ${esc(x.destino)}</div></div><div><b>${reais(x.valor_pago)}</b><br><button class="mini sec" data-r="${x.corrida}">Recibo</button></div></div></li>`).join('')}</ul>`
+    : '<p class="sub">Você ainda não fez viagens.</p>';
+  $$('[data-r]').forEach((b) => (b.onclick = (ev) => acao(ev.currentTarget, async () => {
+    const r = await api('recibo_corrida', { p_corrida: b.dataset.r });
+    const linhas = [['Data', dataHora(r.data)], ['Origem', r.origem], ['Destino', r.destino], ['Categoria', r.categoria], ['Distância', r.distancia_km ? num(r.distancia_km, 1) + ' km' : '—'],
+      ['Duração', r.duracao_min ? num(r.duracao_min) + ' min' : '—'], ['Valor da corrida', reais(r.valor_corrida)], ['Desconto', reais(r.desconto)], ['Total pago', reais(r.valor_pago)],
+      ['Gorjeta', reais(r.gorjeta)], ['Pagamento', r.metodo], ['Motorista', r.motorista || '—'], ['Veículo', r.veiculo || '—'], ['Empresa', r.empresa || '—']];
+    modal(`<h2>Recibo</h2><table>${linhas.map(([k, v]) => `<tr><th>${esc(k)}</th><td>${esc(v)}</td></tr>`).join('')}</table><p class="sub peq">Corrida ${esc(r.corrida)}</p>
+      <div class="linha"><button class="sec cresce" id="rc-baixar">Baixar</button><button class="cresce" data-fechar>Fechar</button></div>`,
+      (f) => ($('#rc-baixar', f).onclick = () => baixar('recibo-' + r.corrida.slice(0, 8) + '.txt', linhas.map(([k, v]) => `${k}: ${v}`).join('\n'), 'text/plain')));
+  })));
+}
+
+// ------------------------- CARTEIRA (Mobi Wallet + Mobi+) -------------------------
+async function telaCarteira() {
+  casca('Carteira', '<div id="w"><span class="carregando"></span></div>', 'carteira');
+  const w = await api('minha_wallet');
+  $('#w').innerHTML = `<h1>Carteira</h1>
+    <div class="grade"><div class="kpi"><div class="r">Créditos</div><div class="v">${reais(w.creditos)}</div></div>
+      <div class="kpi"><div class="r">Mobi+</div><div class="v" style="font-size:1rem">${w.mobi_mais ? esc(w.mobi_mais.plano) + '<div class="sub peq">até ' + dataCurta(w.mobi_mais.renova_em) + '</div>' : 'Não assinante'}</div></div></div>
+    <div class="card"><h2>Adicionar créditos</h2><div class="linha"><select id="rc-valor" class="cresce"><option>20</option><option selected>50</option><option>100</option><option>200</option></select>
+      <select id="rc-metodo" class="cresce"><option value="PIX">PIX</option><option value="CARTAO">Cartão</option></select><button id="rc-ok">Recarregar</button></div>
+      <p class="sub peq">O crédito entra quando o pagamento é confirmado.</p></div>
+    ${w.pagamentos_pendentes.length ? `<div class="card"><h2>Pendentes</h2><ul class="lista">${w.pagamentos_pendentes.map((p) => `<li class="linha"><span class="cresce">${esc(p.tipo)} · ${reais(p.valor)} <span class="sub peq">${dataHora(p.criado_em)}</span></span>${['PIX', 'CARTAO'].includes(p.metodo) ? `<button class="mini" data-pagar="${p.id}">Pagar</button>` : ''}${CFG.MODO_TESTE ? `<button class="mini sec" data-sim="${p.id}">Simular</button>` : ''}</li>`).join('')}</ul></div>` : ''}
+    <div class="card"><h2>Mobi+</h2>${w.mobi_mais ? `<p>Benefícios: ${esc(descreverBeneficios(w.mobi_mais.beneficios))}</p><button class="sec cheio" id="mm-cancelar">Cancelar assinatura</button><p class="sub peq">Se cancelar, os benefícios continuam até o fim do período pago.</p>`
+      : (w.planos_disponiveis.length ? w.planos_disponiveis.map((p) => `<div class="opcao"><div class="cresce"><b>${esc(p.nome)}</b><div class="sub peq">${esc(descreverBeneficios(p.beneficios))}</div></div><div><b>${reais(p.preco_mensal)}</b>/mês<br><button class="mini" data-plano="${p.id}">Assinar</button></div></div>`).join('') : '<p class="sub">Nenhum plano disponível na sua cidade.</p>')}</div>
+    <div class="card"><h2>Reembolsos e cupons</h2><ul class="lista">${[...w.reembolsos.map((r) => `<li>${reais(r.valor)} · ${esc(r.descricao)} <span class="sub peq">${dataCurta(r.data)}</span></li>`),
+      ...w.cupons_usados.map((c) => `<li>Cupom ${esc(c.codigo)}: −${reais(c.desconto)} <span class="sub peq">${dataCurta(c.data)}</span></li>`)].join('') || '<li class="sub">Nada por aqui ainda.</li>'}</ul></div>`;
+  $('#rc-ok').onclick = (ev) => acao(ev.currentTarget, async () => { const r = await api('recarregar_carteira', { p_valor: +$('#rc-valor').value, p_metodo: $('#rc-metodo').value, p_chave_idempotencia: uuid() });
+    await telaCarteira(); const b = $(`[data-pagar="${r.pagamento}"]`); if (b && CFG.COBRANCA_URL) b.click(); else toast('Cobrança gerada. O crédito entra após a confirmação.'); });
+  $$('[data-sim]').forEach((b) => (b.onclick = (ev) => acao(ev.currentTarget, async () => { await api('dev_simular_pagamento', { p_pagamento: b.dataset.sim }); telaCarteira(); })));
+  $$('[data-pagar]').forEach((b) => (b.onclick = (ev) => acao(ev.currentTarget, async () => { const cb = await obterCobranca(b.dataset.pagar);
+    modal(`<h2>Pagamento</h2><p>Valor: <b>${reais(cb.valor)}</b></p>${htmlCobranca(cb)}<p class="sub peq">O crédito entra assim que o banco confirmar.</p><button class="sec cheio" data-fechar>Fechar</button>`, (f) => ligarCobranca(f)); })));
+  $$('[data-plano]').forEach((b) => (b.onclick = (ev) => acao(ev.currentTarget, async () => { await api('assinar_plano', { p_plano: b.dataset.plano, p_metodo: 'PIX' }); toast('Assinatura criada. Ativa após o pagamento.'); telaCarteira(); })));
+  const mc = $('#mm-cancelar'); if (mc) mc.onclick = (ev) => acao(ev.currentTarget, async () => { if (await confirmar('Cancelar o Mobi+? Os benefícios valem até o fim do período pago.', 'Cancelar', true)) { await api('cancelar_assinatura'); telaCarteira(); } });
+}
+function descreverBeneficios(b) {
+  const p = [];
+  if (b.desconto_pct) p.push(`${b.desconto_pct}% de desconto${b.desconto_max_corrida ? ' (até ' + reais(b.desconto_max_corrida) + ' por corrida)' : ''}`);
+  if (b.cancelamentos_gratis_mes) p.push(`${b.cancelamentos_gratis_mes} cancelamento(s) grátis por mês`);
+  if (b.suporte_prioritario) p.push('suporte prioritário');
+  return p.join(', ') || '—';
+}
+
+// ------------------------- CONTA / LGPD -------------------------
+async function telaConta() {
+  const p = E.perfil.perfil;
+  casca('Conta', `<h1>${esc(p.nome)}</h1><div class="sub">${esc(p.email)} · ${esc(p.telefone)} · CPF final ${esc(p.cpf_final)}</div>
+    <div class="card"><h2>Contato de confiança</h2><p class="sub">Recebe o link da viagem se você acionar a emergência.</p>
+      <label>Nome</label><input id="ct-nome"><label>Celular</label><input id="ct-tel" inputmode="tel"><p></p><button class="sec cheio" id="ct-ok">Salvar contato</button></div>
+    <div class="card"><h2>Locais favoritos</h2><ul class="lista" id="favs"></ul><p class="sub peq">Para salvar, escolha o destino na tela inicial e toque em "Salvar como favorito".</p>
+      <button class="sec cheio" id="fav-novo">Salvar destino atual como favorito</button></div>
+    <div class="card"><h2>Notificações</h2><button class="sec cheio" id="push">Ativar notificações neste aparelho</button>
+      <label class="chk"><input type="checkbox" id="pf-promo"> Receber promoções</label></div>
+    <div class="card"><h2>Seus dados (LGPD)</h2><button class="sec cheio" id="exportar">Baixar meus dados</button><p></p>
+      <button class="perigo cheio" id="excluir">Excluir minha conta</button><p class="sub peq">A exclusão acontece após 7 dias (dá para desistir). Registros financeiros obrigatórios ficam guardados de forma anonimizada pelo prazo legal.</p></div>
+    ${CFG.TELEFONE_SUPORTE ? `<a class="btn sec cheio" href="tel:${esc(CFG.TELEFONE_SUPORTE)}">Falar com o suporte</a><p></p>` : ''}
+    <button class="sec cheio" id="sair">Sair</button>`, 'conta');
+  const favs = await tabela('locais_favoritos', { select: 'id,nome,endereco', where: (q) => q.order('nome') }).catch(() => []);
+  $('#favs').innerHTML = favs.map((f) => `<li class="linha"><span class="cresce"><b>${esc(f.nome)}</b> <span class="sub">${esc(f.endereco)}</span></span><button class="mini sec" data-del="${f.id}">Remover</button></li>`).join('') || '<li class="sub">Nenhum.</li>';
+  $$('[data-del]').forEach((b) => (b.onclick = (ev) => acao(ev.currentTarget, async () => { await api('remover_local_favorito', { p_id: b.dataset.del }); telaConta(); })));
+  $('#fav-novo').onclick = (ev) => acao(ev.currentTarget, async () => {
+    if (!E.destino) throw new Error('Escolha um destino na tela inicial primeiro.');
+    const nome = prompt('Nome do favorito (ex.: Casa, Trabalho)'); if (!nome) return;
+    await api('salvar_local_favorito', { p_nome: nome, p_endereco: E.destino.endereco, p_lat: E.destino.lat, p_lng: E.destino.lng }); telaConta();
+  });
+  $('#ct-ok').onclick = (ev) => acao(ev.currentTarget, async () => { await api('salvar_contato_confianca', { p_nome: $('#ct-nome').value, p_telefone: $('#ct-tel').value }); toast('Contato salvo.'); });
+  $('#push').onclick = (ev) => acao(ev.currentTarget, ativarPush);
+  $('#pf-promo').onchange = (ev) => acao(null, async () => { await api('registrar_consentimento', { p_tipo: 'MARKETING', p_versao: CFG.VERSAO_TERMOS || 'v1', p_aceito: ev.target.checked }); toast('Preferência salva.'); });
+  $('#exportar').onclick = (ev) => acao(ev.currentTarget, async () => baixar('meus-dados.json', JSON.stringify(await api('meus_dados_exportar'), null, 2)));
+  $('#excluir').onclick = (ev) => acao(ev.currentTarget, async () => {
+    if (!(await confirmar('Sua conta será anonimizada em 7 dias. Você pode desistir até lá entrando no app. Continuar?', 'Excluir conta', true))) return;
+    const r = await api('solicitar_exclusao_conta', { p_motivo: 'pedido pelo app' }); toast('Exclusão agendada para ' + dataCurta(r.executar_em) + '.');
+  });
+  $('#sair').onclick = sair;
+}
+async function telaNotificacoes() {
+  casca('Notificações', '<h1>Notificações</h1><div id="lista"><span class="carregando"></span></div>', '');
+  const l = await api('minhas_notificacoes', { p_limite: 50 });
+  $('#lista').innerHTML = l.length ? `<ul class="lista">${l.map((n) => `<li><b>${esc(n.titulo)}</b> ${n.lida ? '' : '<span class="pilula">nova</span>'}<div>${esc(n.mensagem)}</div><div class="sub peq">${dataHora(n.criado_em)}</div></li>`).join('')}</ul>` : '<p class="sub">Nada por aqui.</p>';
+  const nl = l.filter((n) => !n.lida).map((n) => n.id); if (nl.length) api('marcar_notificacoes_lidas', { p_ids: nl }).catch(() => {});
+}
+iniciar().catch((e) => { raiz.innerHTML = `<div class="app"><div class="erro">${esc(mensagemErro(e))}</div><button onclick="location.reload()">Tentar de novo</button></div>`; });
+</script>
+</body>
+</html>
